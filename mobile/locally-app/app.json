@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "locally-app",
-    "slug": "locally-app",
+    "slug": "locally",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -11,20 +11,12 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.locally.app",
-      "config": {
-        "googleMapsApiKey": "AIzaSyDaSzJDhbbYU8W0scdoPSOIBAVmrwrxTwM"
-      },
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "We use your location to show nearby people and offers on the map."
       }
     },
     "android": {
       "package": "com.locally.app",
-      "config": {
-        "googleMaps": {
-          "apiKey": "AIzaSyDaSzJDhbbYU8W0scdoPSOIBAVmrwrxTwM"
-        }
-      },
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -43,6 +35,13 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      [
+        "react-native-maps",
+        {
+          "iosGoogleMapsApiKey": "AIzaSyDaSzJDhbbYU8W0scdoPSOIBAVmrwrxTwM",
+          "androidGoogleMapsApiKey": "AIzaSyDaSzJDhbbYU8W0scdoPSOIBAVmrwrxTwM"
+        }
+      ],
       "expo-router",
       [
         "expo-splash-screen",
@@ -60,6 +59,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "80fa1ad0-6a68-4e45-bfa4-72863aed5750"
+      }
+    },
+    "owner": "yrovchanen"
   }
 }
