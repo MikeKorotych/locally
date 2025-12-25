@@ -11,12 +11,20 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.locally.app",
+      "config": {
+        "googleMapsApiKey": "AIzaSyDaSzJDhbbYU8W0scdoPSOIBAVmrwrxTwM"
+      },
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "We use your location to show nearby people and offers on the map."
       }
     },
     "android": {
       "package": "com.locally.app",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDaSzJDhbbYU8W0scdoPSOIBAVmrwrxTwM"
+        }
+      },
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -35,13 +43,6 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      [
-        "react-native-maps",
-        {
-          "iosGoogleMapsApiKey": "AIzaSyDaSzJDhbbYU8W0scdoPSOIBAVmrwrxTwM",
-          "androidGoogleMapsApiKey": "AIzaSyDaSzJDhbbYU8W0scdoPSOIBAVmrwrxTwM"
-        }
-      ],
       "expo-router",
       [
         "expo-splash-screen",
