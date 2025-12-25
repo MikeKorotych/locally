@@ -1,4 +1,4 @@
-# 🌍 HumanMap (working title)
+# 🌍 Locally
 
 **Locally** is a Google Maps–based mobile application that combines:
 
