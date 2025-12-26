@@ -20,6 +20,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@clerk/clerk-sdk-node": "^5.1.6",
     "@nestjs/common": "^11.1.10",
     "@nestjs/core": "^11.1.10",
     "@nestjs/platform-express": "^11.1.10",
