@@ -1,6 +1,11 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'expo-router';
 import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -76,94 +81,106 @@ export default function SignUpScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Create account</Text>
-          <Text style={styles.subtitle}>Join your local community</Text>
-        </View>
-
-        <View style={styles.form}>
-          {!verifying ? (
-            <>
-              <View>
-                <Text style={styles.label}>Email</Text>
-                <TextInput
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  keyboardType="email-address"
-                  placeholder="you@example.com"
-                  placeholderTextColor="#6F6F6F"
-                  style={styles.input}
-                  value={email}
-                  onChangeText={setEmail}
-                />
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <Pressable style={styles.flex} onPress={Keyboard.dismiss} accessible={false}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.container}>
+              <View style={styles.header}>
+                <Text style={styles.title}>Create account</Text>
+                <Text style={styles.subtitle}>Join your local community</Text>
               </View>
 
-              <View>
-                <Text style={styles.label}>Password</Text>
-                <TextInput
-                  autoCapitalize="none"
-                  autoComplete="password"
-                  placeholder="••••••••"
-                  placeholderTextColor="#6F6F6F"
-                  secureTextEntry
-                  style={styles.input}
-                  value={password}
-                  onChangeText={setPassword}
-                />
+              <View style={styles.form}>
+                {!verifying ? (
+                  <>
+                    <View>
+                      <Text style={styles.label}>Email</Text>
+                      <TextInput
+                        autoCapitalize="none"
+                        autoComplete="email"
+                        keyboardType="email-address"
+                        placeholder="you@example.com"
+                        placeholderTextColor="#6F6F6F"
+                        style={styles.input}
+                        value={email}
+                        onChangeText={setEmail}
+                      />
+                    </View>
+
+                    <View>
+                      <Text style={styles.label}>Password</Text>
+                      <TextInput
+                        autoCapitalize="none"
+                        autoComplete="password"
+                        placeholder="••••••••"
+                        placeholderTextColor="#6F6F6F"
+                        secureTextEntry
+                        style={styles.input}
+                        value={password}
+                        onChangeText={setPassword}
+                      />
+                    </View>
+
+                    {error ? <Text style={styles.error}>{error}</Text> : null}
+
+                    <TouchableOpacity
+                      style={[styles.button, !canSubmit && styles.buttonDisabled]}
+                      onPress={onSignUp}
+                      disabled={!canSubmit}
+                      activeOpacity={0.85}
+                    >
+                      <Text style={styles.buttonText}>
+                        {submitting ? 'Creating...' : 'Create account'}
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <>
+                    <View>
+                      <Text style={styles.label}>Verification code</Text>
+                      <TextInput
+                        autoCapitalize="none"
+                        keyboardType="number-pad"
+                        placeholder="Enter code"
+                        placeholderTextColor="#6F6F6F"
+                        style={styles.input}
+                        value={code}
+                        onChangeText={setCode}
+                      />
+                    </View>
+
+                    {error ? <Text style={styles.error}>{error}</Text> : null}
+
+                    <TouchableOpacity
+                      style={[styles.button, !canVerify && styles.buttonDisabled]}
+                      onPress={onVerify}
+                      disabled={!canVerify}
+                      activeOpacity={0.85}
+                    >
+                      <Text style={styles.buttonText}>
+                        {submitting ? 'Verifying...' : 'Verify email'}
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+
+                <View style={styles.footer}>
+                  <Text style={styles.footerText}>Already have an account?</Text>
+                  <Link href="/sign-in" style={styles.link}>
+                    Sign in
+                  </Link>
+                </View>
               </View>
-
-              {error ? <Text style={styles.error}>{error}</Text> : null}
-
-              <TouchableOpacity
-                style={[styles.button, !canSubmit && styles.buttonDisabled]}
-                onPress={onSignUp}
-                disabled={!canSubmit}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.buttonText}>
-                  {submitting ? 'Creating...' : 'Create account'}
-                </Text>
-              </TouchableOpacity>
-            </>
-          ) : (
-            <>
-              <View>
-                <Text style={styles.label}>Verification code</Text>
-                <TextInput
-                  autoCapitalize="none"
-                  keyboardType="number-pad"
-                  placeholder="Enter code"
-                  placeholderTextColor="#6F6F6F"
-                  style={styles.input}
-                  value={code}
-                  onChangeText={setCode}
-                />
-              </View>
-
-              {error ? <Text style={styles.error}>{error}</Text> : null}
-
-              <TouchableOpacity
-                style={[styles.button, !canVerify && styles.buttonDisabled]}
-                onPress={onVerify}
-                disabled={!canVerify}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.buttonText}>
-                  {submitting ? 'Verifying...' : 'Verify email'}
-                </Text>
-              </TouchableOpacity>
-            </>
-          )}
-
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Already have an account?</Text>
-            <Link href="/sign-in" style={styles.link}>
-              Sign in
-            </Link>
-          </View>
-        </View>
-      </View>
+            </View>
+          </ScrollView>
+        </Pressable>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -172,6 +189,12 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#0B0B0E',
+  },
+  flex: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   container: {
     flex: 1,
