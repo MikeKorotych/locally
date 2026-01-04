@@ -39,8 +39,13 @@ jobs:
             sudo /usr/local/bin/docker-compose -f docker-compose.yaml down --remove-orphans || true
             sudo docker system prune -af || true
             
-            # Build and start (errors will fail the job)
-            sudo /usr/local/bin/docker-compose -f docker-compose.yaml up -d --build
+            # Build backend image separately (avoids buildx requirement)
+            cd backend
+            sudo docker build -t locally-backend .
+            cd ..
+            
+            # Start services (postgres + pre-built backend)
+            sudo /usr/local/bin/docker-compose -f docker-compose.yaml up -d
             
             # Show status and logs
             sudo docker ps -a
