@@ -18,6 +18,7 @@ import { useAuth, useSignIn } from '@clerk/clerk-expo';
 export default function SignInScreen() {
   const { getToken } = useAuth();
   const { signIn, setActive, isLoaded } = useSignIn();
+  const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
@@ -77,6 +78,20 @@ export default function SignInScreen() {
         await setActive({ session: result.createdSessionId });
         const token = await getToken();
         console.log('clerk.jwt', token);
+
+        if (backendUrl) {
+          try {
+            const response = await fetch(backendUrl, {
+              method: 'GET',
+              headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+            });
+            console.log('backend.status', response.status);
+          } catch (requestError) {
+            console.log('backend.error', requestError);
+          }
+        } else {
+          console.log('backend.error', 'Missing EXPO_PUBLIC_BACKEND_URL');
+        }
       } else {
         setError('Sign-in requires additional steps.');
       }
@@ -112,6 +127,19 @@ export default function SignInScreen() {
         await setActive({ session: updatedSignIn.createdSessionId });
         const token = await getToken();
         console.log('clerk.jwt', token);
+        if (backendUrl) {
+          try {
+            const response = await fetch(backendUrl, {
+              method: 'GET',
+              headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+            });
+            console.log('backend.status', response.status);
+          } catch (requestError) {
+            console.log('backend.error', requestError);
+          }
+        } else {
+          console.log('backend.error', 'Missing EXPO_PUBLIC_BACKEND_URL');
+        }
       } else {
         setError('Verification requires additional steps.');
       }
