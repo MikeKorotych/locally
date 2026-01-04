@@ -13,9 +13,10 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useSignIn } from '@clerk/clerk-expo';
+import { useAuth, useSignIn } from '@clerk/clerk-expo';
 
 export default function SignInScreen() {
+  const { getToken } = useAuth();
   const { signIn, setActive, isLoaded } = useSignIn();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -74,6 +75,8 @@ export default function SignInScreen() {
 
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId });
+        const token = await getToken();
+        console.log('clerk.jwt', token);
       } else {
         setError('Sign-in requires additional steps.');
       }
@@ -107,6 +110,8 @@ export default function SignInScreen() {
 
       if (updatedSignIn.status === 'complete') {
         await setActive({ session: updatedSignIn.createdSessionId });
+        const token = await getToken();
+        console.log('clerk.jwt', token);
       } else {
         setError('Verification requires additional steps.');
       }
