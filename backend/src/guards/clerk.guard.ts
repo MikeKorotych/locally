@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { createClerkClient } from '@clerk/clerk-sdk-node';
 
+
 @Injectable()
 export class ClerkAuthGuard implements CanActivate {
   private clerk = createClerkClient({ secretKey: process.env.CLERK_API_KEY! });
