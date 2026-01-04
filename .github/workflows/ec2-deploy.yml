@@ -23,8 +23,25 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           command_timeout: 20m
           script: |
-            cd backend
-            git pull origin main
-            docker compose down || true
-            docker system prune -af || true
-            docker compose up -d --build || true
+            set -euo pipefail
+            
+            # Clone repo if missing, otherwise sync
+            if [ ! -d "$HOME/locally/.git" ]; then
+              git clone https://github.com/MikeKorotych/locally.git "$HOME/locally"
+            fi
+            
+            cd "$HOME/locally"
+            git fetch origin
+            git checkout main
+            git reset --hard origin/main
+            
+            # Stop & remove old containers
+            sudo docker-compose -f docker-compose.yaml down --remove-orphans || true
+            sudo docker system prune -af || true
+            
+            # Build and start (errors will fail the job)
+            sudo docker-compose -f docker-compose.yaml up -d --build
+            
+            # Show status and logs
+            sudo docker ps -a
+            sudo docker-compose -f docker-compose.yaml logs --tail 100 backend
