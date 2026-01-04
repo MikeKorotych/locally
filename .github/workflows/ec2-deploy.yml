@@ -36,12 +36,12 @@ jobs:
             git reset --hard origin/main
             
             # Stop & remove old containers
-            sudo docker-compose -f docker-compose.yaml down --remove-orphans || true
+            sudo /usr/local/bin/docker-compose -f docker-compose.yaml down --remove-orphans || true
             sudo docker system prune -af || true
             
             # Build and start (errors will fail the job)
-            sudo docker-compose -f docker-compose.yaml up -d --build
+            sudo /usr/local/bin/docker-compose -f docker-compose.yaml up -d --build
             
             # Show status and logs
             sudo docker ps -a
-            sudo docker-compose -f docker-compose.yaml logs --tail 100 backend
+            sudo /usr/local/bin/docker-compose -f docker-compose.yaml logs --tail 100 backend
