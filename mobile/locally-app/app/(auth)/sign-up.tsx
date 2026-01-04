@@ -85,7 +85,11 @@ export default function SignUpScreen() {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <Pressable style={styles.flex} onPress={Keyboard.dismiss} accessible={false}>
+        <Pressable
+          style={styles.flex}
+          onPress={Keyboard.dismiss}
+          accessible={false}
+        >
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
@@ -130,7 +134,10 @@ export default function SignUpScreen() {
                     {error ? <Text style={styles.error}>{error}</Text> : null}
 
                     <TouchableOpacity
-                      style={[styles.button, !canSubmit && styles.buttonDisabled]}
+                      style={[
+                        styles.button,
+                        !canSubmit && styles.buttonDisabled,
+                      ]}
                       onPress={onSignUp}
                       disabled={!canSubmit}
                       activeOpacity={0.85}
@@ -158,7 +165,10 @@ export default function SignUpScreen() {
                     {error ? <Text style={styles.error}>{error}</Text> : null}
 
                     <TouchableOpacity
-                      style={[styles.button, !canVerify && styles.buttonDisabled]}
+                      style={[
+                        styles.button,
+                        !canVerify && styles.buttonDisabled,
+                      ]}
                       onPress={onVerify}
                       disabled={!canVerify}
                       activeOpacity={0.85}
@@ -171,7 +181,9 @@ export default function SignUpScreen() {
                 )}
 
                 <View style={styles.footer}>
-                  <Text style={styles.footerText}>Already have an account?</Text>
+                  <Text style={styles.footerText}>
+                    Already have an account?
+                  </Text>
                   <Link href="/sign-in" style={styles.link}>
                     Sign in
                   </Link>
