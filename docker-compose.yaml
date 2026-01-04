@@ -20,7 +20,7 @@ services:
       retries: 5
 
   backend:
-    build: ./backend
+    image: locally-backend
     container_name: locally_backend
     restart: always
     command: >
