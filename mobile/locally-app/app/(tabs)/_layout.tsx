@@ -9,12 +9,11 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
   const { isSignedIn } = useAuth();
+  const colorScheme = useColorScheme();
 
   if (!isSignedIn) {
     return <Redirect href="/sign-in" />;
   }
-
-  const colorScheme = useColorScheme();
 
   return (
     <Tabs

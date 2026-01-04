@@ -1,10 +1,12 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth, useUser } from '@clerk/clerk-expo';
 
 export default function ProfileScreen() {
   const { signOut } = useAuth();
   const { user } = useUser();
+  const router = useRouter();
 
   const email = user?.primaryEmailAddress?.emailAddress;
   const name = user?.fullName || user?.firstName || 'User';
@@ -17,7 +19,13 @@ export default function ProfileScreen() {
           <Text style={styles.subtitle}>{email ?? 'No email available'}</Text>
         </View>
 
-        <TouchableOpacity style={styles.button} onPress={() => signOut()}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={async () => {
+            await signOut();
+            router.replace('/sign-in');
+          }}
+        >
           <Text style={styles.buttonText}>Sign out</Text>
         </TouchableOpacity>
       </View>

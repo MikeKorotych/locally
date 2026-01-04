@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'expo-router';
 import {
   Keyboard,
@@ -13,18 +13,30 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useSignIn } from '@clerk/clerk-expo';
+import { useAuth, useSignIn } from '@clerk/clerk-expo';
 
 export default function SignInScreen() {
+  const { getToken } = useAuth();
   const { signIn, setActive, isLoaded } = useSignIn();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [signInAttempt, setSignInAttempt] = useState<any>(null);
+  const [needsSecondFactor, setNeedsSecondFactor] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const canSubmit = useMemo(
-    () => Boolean(email.trim() && password.trim()) && !submitting,
-    [email, password, submitting]
+    () =>
+      Boolean(email.trim() && password.trim()) &&
+      !submitting &&
+      !needsSecondFactor,
+    [email, password, submitting, needsSecondFactor]
+  );
+
+  const canVerify = useMemo(
+    () => Boolean(verificationCode.trim()) && !submitting,
+    [verificationCode, submitting]
   );
 
   const onSignIn = async () => {
@@ -40,8 +52,31 @@ export default function SignInScreen() {
         password,
       });
 
+      if (result.status === 'needs_second_factor') {
+        const emailFactor = result.supportedSecondFactors?.find(
+          (factor: any) => factor.strategy === 'email_code'
+        );
+
+        if (!emailFactor) {
+          setError('Second-factor email code is not available.');
+          return;
+        }
+
+        await result.prepareSecondFactor({
+          strategy: 'email_code',
+          emailAddressId: emailFactor.emailAddressId,
+        });
+
+        setSignInAttempt(result);
+        setNeedsSecondFactor(true);
+        setVerificationCode('');
+        return;
+      }
+
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId });
+        const token = await getToken();
+        console.log('clerk.jwt', token);
       } else {
         setError('Sign-in requires additional steps.');
       }
@@ -50,9 +85,39 @@ export default function SignInScreen() {
       const rawMessage = clerkError?.message;
       const code = clerkError?.code;
       const message =
-        rawMessage === 'Identifier is invalid' || code === 'form_identifier_not_found'
+        rawMessage === 'Identifier is invalid' ||
+        code === 'form_identifier_not_found'
           ? 'Email or password is incorrect.'
           : rawMessage || 'Invalid email or password.';
+      setError(message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const onVerifyCode = async () => {
+    if (!isLoaded || !canVerify || !signInAttempt) {
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setError(null);
+      const updatedSignIn = await signInAttempt.attemptSecondFactor({
+        strategy: 'email_code',
+        code: verificationCode.trim(),
+      });
+
+      if (updatedSignIn.status === 'complete') {
+        await setActive({ session: updatedSignIn.createdSessionId });
+        const token = await getToken();
+        console.log('clerk.jwt', token);
+      } else {
+        setError('Verification requires additional steps.');
+      }
+    } catch (err: any) {
+      const message =
+        err?.errors?.[0]?.message || 'Verification failed. Try again.';
       setError(message);
     } finally {
       setSubmitting(false);
@@ -65,7 +130,11 @@ export default function SignInScreen() {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <Pressable style={styles.flex} onPress={Keyboard.dismiss} accessible={false}>
+        <Pressable
+          style={styles.flex}
+          onPress={Keyboard.dismiss}
+          accessible={false}
+        >
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
@@ -77,44 +146,75 @@ export default function SignInScreen() {
               </View>
 
               <View style={styles.form}>
-                <View>
-                  <Text style={styles.label}>Email</Text>
-                  <TextInput
-                    autoCapitalize="none"
-                    autoComplete="email"
-                    keyboardType="email-address"
-                    placeholder="you@example.com"
-                    placeholderTextColor="#6F6F6F"
-                    style={styles.input}
-                    value={email}
-                    onChangeText={setEmail}
-                  />
-                </View>
+                {!needsSecondFactor && (
+                  <React.Fragment>
+                    <View>
+                      <Text style={styles.label}>Email</Text>
+                      <TextInput
+                        autoCapitalize="none"
+                        autoComplete="email"
+                        keyboardType="email-address"
+                        placeholder="you@example.com"
+                        placeholderTextColor="#6F6F6F"
+                        style={styles.input}
+                        value={email}
+                        onChangeText={setEmail}
+                        editable={!needsSecondFactor && !submitting}
+                      />
+                    </View>
 
-                <View>
-                  <Text style={styles.label}>Password</Text>
-                  <TextInput
-                    autoCapitalize="none"
-                    autoComplete="password"
-                    placeholder="••••••••"
-                    placeholderTextColor="#6F6F6F"
-                    secureTextEntry
-                    style={styles.input}
-                    value={password}
-                    onChangeText={setPassword}
-                  />
-                </View>
+                    <View>
+                      <Text style={styles.label}>Password</Text>
+                      <TextInput
+                        autoCapitalize="none"
+                        autoComplete="password"
+                        placeholder="••••••••"
+                        placeholderTextColor="#6F6F6F"
+                        secureTextEntry
+                        style={styles.input}
+                        value={password}
+                        onChangeText={setPassword}
+                        editable={!needsSecondFactor && !submitting}
+                      />
+                    </View>
+                  </React.Fragment>
+                )}
+
+                {needsSecondFactor ? (
+                  <View>
+                    <Text style={styles.label}>Verification code</Text>
+                    <TextInput
+                      autoCapitalize="none"
+                      keyboardType="number-pad"
+                      placeholder="Enter code"
+                      placeholderTextColor="#6F6F6F"
+                      style={styles.input}
+                      value={verificationCode}
+                      onChangeText={setVerificationCode}
+                    />
+                  </View>
+                ) : null}
 
                 {error ? <Text style={styles.error}>{error}</Text> : null}
 
                 <TouchableOpacity
-                  style={[styles.button, !canSubmit && styles.buttonDisabled]}
-                  onPress={onSignIn}
-                  disabled={!canSubmit}
+                  style={[
+                    styles.button,
+                    !(needsSecondFactor ? canVerify : canSubmit) &&
+                      styles.buttonDisabled,
+                  ]}
+                  onPress={needsSecondFactor ? onVerifyCode : onSignIn}
+                  disabled={!(needsSecondFactor ? canVerify : canSubmit)}
                   activeOpacity={0.85}
                 >
                   <Text style={styles.buttonText}>
-                    {submitting ? 'Signing in...' : 'Sign in'}
+                    {submitting
+                      ? needsSecondFactor
+                        ? 'Verifying...'
+                        : 'Signing in...'
+                      : needsSecondFactor
+                      ? 'Verify code'
+                      : 'Sign in'}
                   </Text>
                 </TouchableOpacity>
 
