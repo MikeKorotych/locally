@@ -1,20 +1,20 @@
-# Convenience Makefile for common Docker Compose commands
-ENV_FILE=backend/.env.local
+DEV_COMPOSE=-f docker-compose.dev.yml
+ENV_FILE=backend/.env
 
 up:
-	docker compose --env-file $(ENV_FILE) up --build -d
+	docker compose $(DEV_COMPOSE) --env-file $(ENV_FILE) up --build -d
 
-logs:
-	docker compose --env-file $(ENV_FILE) logs -f backend
+dev-up:
+	$(MAKE) up
 
-ps:
-	docker compose --env-file $(ENV_FILE) ps
+dev-build:
+	docker compose $(DEV_COMPOSE) build backend
 
-migrate:
-	docker compose --env-file $(ENV_FILE) run --rm backend npx prisma migrate deploy
+dev-logs:
+	docker compose $(DEV_COMPOSE) logs -f backend
 
-down:
-	docker compose --env-file $(ENV_FILE) down --remove-orphans
+dev-migrate:
+	docker compose $(DEV_COMPOSE) --env-file $(ENV_FILE) run --rm backend npx prisma migrate deploy
 
-restart:
-	docker compose --env-file $(ENV_FILE) restart backend
+dev-down:
+	docker compose $(DEV_COMPOSE) down --remove-orphans

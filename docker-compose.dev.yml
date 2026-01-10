@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: locally_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: locally_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./backend
+    container_name: locally_backend
+    restart: unless-stopped
+    env_file:
+      - backend/.env
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    command: >
+      sh -c "
+        until pg_isready -h postgres -U user -d locally_db; do
+          echo 'Waiting for Postgres...';
+          sleep 2;
+        done;
+        npx prisma generate &&
+        npx prisma migrate dev &&
+        npm run start:dev
+      "
+
+volumes:
+  pgdata:

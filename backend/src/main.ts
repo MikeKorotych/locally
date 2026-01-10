@@ -1,8 +1,17 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { ConfigService } from '@nestjs/config/dist/config.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 8080, '0.0.0.0');
+  const config = app.get(ConfigService);
+  const port = config.get<number>('PORT') ?? 8080;
+  const db_url = config.get<string>('DATABASE_URL');
+  if (!db_url) {
+    throw new Error('DATABASE_URL is not defined');
+  }
+  console.log(`App is running on port: ${port}`);
+  console.log('DATABASE_URL:', db_url);
+  await app.listen(port, '0.0.0.0');
 }
 bootstrap().catch((err) => console.error(err));

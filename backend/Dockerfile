@@ -11,4 +11,4 @@ COPY . .
 
 RUN npx prisma generate
 
-CMD ["sh", "-c", "until pg_isready -h postgres -p 5432 -U user; do echo 'Waiting for Postgres...'; sleep 2; done && npx prisma migrate deploy && npm run start:dev"]
+CMD ["sh", "-c", "until pg_isready -h \"$DB_HOST\" -p \"$DB_PORT\" -U \"$DB_USER\"; do echo 'Waiting for Postgres...'; sleep 2; done && npx prisma migrate deploy && npm run start:dev"]

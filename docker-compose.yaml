@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   backend:
     image: locally-backend
@@ -5,23 +7,21 @@ services:
     restart: always
     command: >
       sh -c "
-        until pg_isready -h \"$DB_HOST\" -p \"$DB_PORT\" -U \"$DB_USER\"; do
+        until PGPASSWORD=$DB_PASSWORD pg_isready -h \"$DB_HOST\" -p \"$DB_PORT\" -U \"$DB_USER\"; do
           echo 'Waiting for Postgres...';
           sleep 2;
         done;
         npx prisma generate &&
         npx prisma migrate deploy &&
-        npm run start:dev
+        npm run start:prod
       "
     ports:
       - "8080:8080"
     environment:
+      NODE_ENV: production
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT:-5432}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
       DATABASE_URL: ${DATABASE_URL}
-
-volumes:
-  pgdata:
