@@ -1,4 +1,4 @@
-name: Server deploy to EC2
+name: Deploy to EC2
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Connect and Deploy
+      - name: Connect and Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -24,29 +24,35 @@ jobs:
           command_timeout: 20m
           script: |
             set -euo pipefail
-            
-            # Clone repo if missing, otherwise sync
-            if [ ! -d "$HOME/locally/.git" ]; then
-              git clone https://github.com/MikeKorotych/locally.git "$HOME/locally"
+            REPO_DIR="$HOME/locally"
+
+            # Clone or fetch repo
+            if [ ! -d "$REPO_DIR/.git" ]; then
+              git clone https://github.com/MikeKorotych/locally.git "$REPO_DIR"
             fi
-            
-            cd "$HOME/locally"
+            cd "$REPO_DIR"
             git fetch origin
             git checkout main
             git reset --hard origin/main
-            
-            # Stop & remove old containers
-            sudo /usr/local/bin/docker-compose -f docker-compose.yaml down --remove-orphans || true
+
+            # Stop old containers
+            sudo docker-compose -f docker-compose.prod.yml down --remove-orphans || true
             sudo docker system prune -af || true
-            
-            # Build backend image separately (avoids buildx requirement)
+
+            # Build backend
             cd backend
             sudo docker build -t locally-backend .
             cd ..
-            
-            # Start services (postgres + pre-built backend)
-            sudo /usr/local/bin/docker-compose -f docker-compose.yaml up -d
-            
+
+            # Write single DATABASE_URL env file
+            cat > "$REPO_DIR/.env.production" <<EOF
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            NODE_ENV=production
+            EOF
+
+            # Start backend
+            sudo docker-compose --env-file "$REPO_DIR/.env.production" -f docker-compose.prod.yml up -d
+
             # Show status and logs
             sudo docker ps -a
-            sudo /usr/local/bin/docker-compose -f docker-compose.yaml logs --tail 100 backend
+            sudo docker-compose --env-file "$REPO_DIR/.env.production" -f docker-compose.prod.yml logs --tail 100 backend
