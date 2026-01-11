@@ -4030,6 +4030,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-navigation/material-top-tabs@npm:^7.4.0":
+  version: 7.4.11
+  resolution: "@react-navigation/material-top-tabs@npm:7.4.11"
+  dependencies:
+    "@react-navigation/elements": "npm:^2.9.3"
+    color: "npm:^4.2.3"
+    react-native-tab-view: "npm:^4.2.2"
+  peerDependencies:
+    "@react-navigation/native": ^7.1.26
+    react: ">= 18.2.0"
+    react-native: "*"
+    react-native-pager-view: ">= 6.0.0"
+    react-native-safe-area-context: ">= 4.0.0"
+  checksum: 10c0/20dd99926e381ed0ffc84ba465527c2473b1047440bc3722770c974d7a0ba56c913033cec84995b2d37b745d696bc13d2079b683e330aa9e4715c6546e26cf3f
+  languageName: node
+  linkType: hard
+
 "@react-navigation/native-stack@npm:^7.3.16":
   version: 7.9.0
   resolution: "@react-navigation/native-stack@npm:7.9.0"
@@ -11113,6 +11130,7 @@ __metadata:
     "@react-native-community/slider": "npm:5.0.1"
     "@react-navigation/bottom-tabs": "npm:^7.4.0"
     "@react-navigation/elements": "npm:^2.6.3"
+    "@react-navigation/material-top-tabs": "npm:^7.4.0"
     "@react-navigation/native": "npm:^7.1.8"
     "@shopify/flash-list": "npm:2.0.2"
     "@shopify/react-native-skia": "npm:2.2.12"
@@ -11149,6 +11167,7 @@ __metadata:
     react-native-safe-area-context: "npm:~5.6.0"
     react-native-screens: "npm:~4.16.0"
     react-native-svg: "npm:15.12.1"
+    react-native-tab-view: "npm:^4.1.0"
     react-native-web: "npm:~0.21.0"
     react-native-worklets: "npm:^0.5.1"
     typescript: "npm:~5.9.2"
@@ -13210,6 +13229,19 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 10c0/ed94b57007125c715283fc760438ac8eac0677ced3201f6e272a7cd4459f3fecb672a8eed2c32664e5b8e6e0367585353b0f83f99b231f603d75094bb052c01f
+  languageName: node
+  linkType: hard
+
+"react-native-tab-view@npm:^4.1.0, react-native-tab-view@npm:^4.2.2":
+  version: 4.2.2
+  resolution: "react-native-tab-view@npm:4.2.2"
+  dependencies:
+    use-latest-callback: "npm:^0.2.4"
+  peerDependencies:
+    react: ">= 18.2.0"
+    react-native: "*"
+    react-native-pager-view: ">= 6.0.0"
+  checksum: 10c0/8fadb0d84e2ab9695dd58946eed2840deefde1ab16cfad3bcdaf4d1e25f68fed171f7a04f1deb9a4cc267a8eafe1f620d204a0a3cd00f724c5997df104e8c45d
   languageName: node
   linkType: hard
 
