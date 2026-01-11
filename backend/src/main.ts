@@ -10,7 +10,7 @@ async function bootstrap() {
   if (!db_url) {
     throw new Error('DATABASE_URL is not defined');
   }
-  console.log(`App is running on port: ${port}`);
+  console.log(`PORT: ${port}`);
   console.log('DATABASE_URL:', db_url);
   await app.listen(port, '0.0.0.0');
 }

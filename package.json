@@ -1,0 +1,16 @@
+{
+  "name": "locally-root",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "mobile/locally-app"
+  ],
+  "scripts": {
+    "prepare": "husky install"
+  },
+  "packageManager": "yarn@4.5.2+sha224.c2e2e9ed3cdadd6ec250589b3393f71ae56d5ec297af11cec1eba3b4",
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}
