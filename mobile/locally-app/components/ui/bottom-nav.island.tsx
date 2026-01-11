@@ -9,6 +9,8 @@ import {
 } from 'react-native';
 import { type MaterialTopTabBarProps } from '@react-navigation/material-top-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { IconSymbol, type IconSymbolName } from '@/components/ui/icon-symbol';
 
 type FlipVariant = 'icon' | 'button';
@@ -33,6 +35,9 @@ export default function BottomNavBar(props: BottomNavBarProps) {
     secondaryIconName,
   } = props;
   const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
+  const resolvedScheme = colorScheme ?? 'light';
+  const isLight = resolvedScheme === 'light';
   const routes = state.routes.slice(0, 2);
   const activeIndex = Math.min(state.index, routes.length - 1);
   const activeRoute = routes[activeIndex];
@@ -67,7 +72,7 @@ export default function BottomNavBar(props: BottomNavBarProps) {
     outputRange: [0, 0, 1],
   });
 
-  const iconColor = '#fff';
+  const iconColor = isLight ? '#000' : '#fff';
   const frontIcon = (
     <IconSymbol size={28} name={primaryIconName} color={iconColor} />
   );
@@ -107,7 +112,7 @@ export default function BottomNavBar(props: BottomNavBarProps) {
   const buttonStyle = [
     styles.circleButton,
     {
-      backgroundColor: '#000',
+      backgroundColor: isLight ? Colors.light.background : '#000',
     },
     flipVariant === 'button'
       ? { transform: [{ perspective: 800 }, { rotateY: rotation }] }
