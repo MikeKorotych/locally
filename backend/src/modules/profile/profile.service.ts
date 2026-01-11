@@ -7,7 +7,7 @@ import { User } from 'src/types/user/user.types';
 export class ProfileService {
   constructor(private readonly prisma: PrismaService) {}
 
-  public async getOrCreate(clerkId: string): Promise<User> {
+  public async getOrCreate(clerkId: string): Promise<Partial<User>> {
     const existingUser = await this.prisma.user.findUnique({
       where: { clerkId },
     });
@@ -24,7 +24,18 @@ export class ProfileService {
           lastName,
         },
       });
-      return newUser;
+      const {
+        id,
+        email: createdEmail,
+        firstName: createdFirstName,
+        lastName: createdLastName,
+      } = newUser;
+      return {
+        id,
+        email: createdEmail,
+        firstName: createdFirstName,
+        lastName: createdLastName,
+      };
     }
 
     return existingUser;
