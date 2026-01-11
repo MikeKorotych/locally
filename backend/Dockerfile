@@ -23,10 +23,18 @@ FROM node:20-slim AS runner
 RUN useradd --system --user-group app
 WORKDIR /app
 
+# ensure home dir exists and is writable, set HOME and npm cache to writable location
+RUN mkdir -p /home/app && chown -R app:app /home/app /app
+ENV HOME=/home/app
+ENV NPM_CONFIG_CACHE=/tmp/.npm
+
 # copy only what's needed from builder
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
+
+# make sure /app is owned by app user (node_modules/dist may be root-owned)
+RUN chown -R app:app /app /home/app
 
 ENV NODE_ENV=production
 EXPOSE 3000
