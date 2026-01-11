@@ -26,13 +26,18 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         tabBarShowIcon: true,
         tabBarIndicatorStyle: {
-          backgroundColor: Colors[colorScheme ?? 'light'].tint,
+          height: 0,
         },
         tabBarStyle: {
-          height: 70,
+          height: 50,
         },
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
-        tabBarItemStyle: { paddingVertical: 6 },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+          padding: 0,
+          margin: 0,
+        },
+        tabBarItemStyle: { paddingVertical: 0, margin: 0 },
       }}
     >
       <MaterialTabs.Screen
@@ -45,7 +50,7 @@ export default function TabLayout() {
         }}
       />
       <MaterialTabs.Screen
-        name="explore"
+        name="profile"
         options={{
           title: 'Profile',
           tabBarIcon: ({ color }: { color: string }) => (
