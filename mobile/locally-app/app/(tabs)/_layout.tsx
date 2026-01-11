@@ -24,7 +24,7 @@ export default function TabLayout() {
         <BottomNavBar
           {...props}
           flipVariant="icon"
-          interactionMode="tap"
+          interactionMode="swipe"
           primaryIconName="person.fill"
           secondaryIconName="magnifyingglass"
         />

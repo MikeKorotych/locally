@@ -94,10 +94,16 @@ export default function BottomNavBar(props: BottomNavBarProps) {
   };
 
   const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => interactionMode === 'swipe',
+    onStartShouldSetPanResponderCapture: () => interactionMode === 'swipe',
     onMoveShouldSetPanResponder: (_, gesture) => {
       if (interactionMode !== 'swipe') return false;
       const isHorizontal = Math.abs(gesture.dx) > Math.abs(gesture.dy);
-      return isHorizontal && Math.abs(gesture.dx) > 8;
+      return isHorizontal && Math.abs(gesture.dx) > 3;
+    },
+    onMoveShouldSetPanResponderCapture: (_, gesture) => {
+      if (interactionMode !== 'swipe') return false;
+      return Math.abs(gesture.dx) > Math.abs(gesture.dy);
     },
     onPanResponderRelease: (_, gesture) => {
       if (interactionMode !== 'swipe') return;
@@ -134,45 +140,57 @@ export default function BottomNavBar(props: BottomNavBarProps) {
       pointerEvents="box-none"
       style={[styles.safeArea, { bottom: insets.bottom + 36 }]}
     >
-      <Animated.View
-        style={[styles.shadowWrap, { shadowColor, shadowRadius, borderColor }]}
-      >
-        <Pressable
-          accessibilityRole="button"
-          onPress={handlePress}
-          disabled={interactionMode === 'swipe'}
-          style={buttonStyle}
+      <Animated.View>
+        <View
+          style={styles.swipeZone}
           {...(interactionMode === 'swipe' ? panResponder.panHandlers : {})}
         >
-          {flipVariant === 'icon' ? (
-            <View style={styles.iconFlipWrap}>
-              <Animated.View
-                style={[
-                  styles.iconFace,
-                  {
-                    opacity: frontOpacity,
-                    transform: [{ perspective: 800 }, { rotateY: frontRotate }],
-                  },
-                ]}
-              >
-                {frontIcon}
-              </Animated.View>
-              <Animated.View
-                style={[
-                  styles.iconFace,
-                  {
-                    opacity: backOpacity,
-                    transform: [{ perspective: 800 }, { rotateY: backRotate }],
-                  },
-                ]}
-              >
-                {backIcon}
-              </Animated.View>
-            </View>
-          ) : (
-            frontIcon
-          )}
-        </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            onPress={handlePress}
+            disabled={interactionMode === 'swipe'}
+            style={[
+              styles.shadowWrap,
+              buttonStyle,
+              { shadowColor, shadowRadius, borderColor },
+            ]}
+          >
+            {flipVariant === 'icon' ? (
+              <View style={styles.iconFlipWrap}>
+                <Animated.View
+                  style={[
+                    styles.iconFace,
+                    {
+                      opacity: frontOpacity,
+                      transform: [
+                        { perspective: 800 },
+                        { rotateY: frontRotate },
+                      ],
+                    },
+                  ]}
+                >
+                  {frontIcon}
+                </Animated.View>
+                <Animated.View
+                  style={[
+                    styles.iconFace,
+                    {
+                      opacity: backOpacity,
+                      transform: [
+                        { perspective: 800 },
+                        { rotateY: backRotate },
+                      ],
+                    },
+                  ]}
+                >
+                  {backIcon}
+                </Animated.View>
+              </View>
+            ) : (
+              frontIcon
+            )}
+          </Pressable>
+        </View>
       </Animated.View>
     </View>
   );
@@ -205,6 +223,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: Platform.select({ ios: 0.5, android: 0 }),
     borderColor: 'rgba(0, 0, 0, 0.08)',
+  },
+  swipeZone: {
+    paddingHorizontal: 24,
+    paddingVertical: 16,
   },
   iconFlipWrap: {
     width: 28,
