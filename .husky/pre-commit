@@ -1,6 +1,5 @@
-# Run prettier on staged files
-yarn --cwd backend lint-staged
-
-chmod +x .husky/pre-commit
-git add .husky/pre-commit
-git commit -m "chore(husky): make pre-commit hook executable"
+#!/bin/sh
+# Fix for Yarn Berry + Husky
+unset GIT_INDEX_FILE
+cd "$(dirname "$0")/.."
+corepack yarn workspace backend lint-staged

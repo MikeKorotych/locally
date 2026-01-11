@@ -6,12 +6,15 @@ import {
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
+import * as NavigationBar from 'expo-navigation-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ClerkProvider } from '@clerk/clerk-expo';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
+import { useEffect } from 'react';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Colors } from '@/constants/theme';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -24,6 +27,15 @@ export default function RootLayout() {
   if (!publishableKey) {
     throw new Error('Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY');
   }
+
+  useEffect(() => {
+    if (Platform.OS !== 'android') {
+      return;
+    }
+    const theme = colorScheme === 'dark' ? Colors.dark : Colors.light;
+    NavigationBar.setBackgroundColorAsync(theme.background);
+    NavigationBar.setButtonStyleAsync(colorScheme === 'dark' ? 'light' : 'dark');
+  }, [colorScheme]);
 
   return (
     <GestureHandlerRootView style={styles.root}>
