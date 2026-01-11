@@ -14,9 +14,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSignUp } from '@clerk/clerk-expo';
+import { AuthColors } from '../../utils/colors';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function SignUpScreen() {
   const { signUp, setActive, isLoaded } = useSignUp();
+  const theme = useColorScheme();
+  const colors = AuthColors[theme];
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
@@ -80,7 +84,9 @@ export default function SignUpScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colors.background }]}
+    >
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -96,53 +102,87 @@ export default function SignUpScreen() {
           >
             <View style={styles.container}>
               <View style={styles.header}>
-                <Text style={styles.title}>Create account</Text>
-                <Text style={styles.subtitle}>Join your local community</Text>
+                <Text style={[styles.title, { color: colors.textPrimary }]}>
+                  Create account
+                </Text>
+                <Text
+                  style={[styles.subtitle, { color: colors.textSecondary }]}
+                >
+                  Join your local community
+                </Text>
               </View>
 
               <View style={styles.form}>
                 {!verifying ? (
                   <>
                     <View>
-                      <Text style={styles.label}>Email</Text>
+                      <Text style={[styles.label, { color: colors.textMuted }]}>
+                        Email
+                      </Text>
                       <TextInput
                         autoCapitalize="none"
                         autoComplete="email"
                         keyboardType="email-address"
                         placeholder="you@example.com"
-                        placeholderTextColor="#6F6F6F"
-                        style={styles.input}
+                        placeholderTextColor={colors.placeholder}
+                        style={[
+                          styles.input,
+                          {
+                            borderColor: colors.border,
+                            backgroundColor: colors.inputBackground,
+                            color: colors.textPrimary,
+                          },
+                        ]}
                         value={email}
                         onChangeText={setEmail}
                       />
                     </View>
 
                     <View>
-                      <Text style={styles.label}>Password</Text>
+                      <Text style={[styles.label, { color: colors.textMuted }]}>
+                        Password
+                      </Text>
                       <TextInput
                         autoCapitalize="none"
                         autoComplete="password"
                         placeholder="••••••••"
-                        placeholderTextColor="#6F6F6F"
+                        placeholderTextColor={colors.placeholder}
                         secureTextEntry
-                        style={styles.input}
+                        style={[
+                          styles.input,
+                          {
+                            borderColor: colors.border,
+                            backgroundColor: colors.inputBackground,
+                            color: colors.textPrimary,
+                          },
+                        ]}
                         value={password}
                         onChangeText={setPassword}
                       />
                     </View>
 
-                    {error ? <Text style={styles.error}>{error}</Text> : null}
+                    {error ? (
+                      <Text style={[styles.error, { color: colors.error }]}>
+                        {error}
+                      </Text>
+                    ) : null}
 
                     <TouchableOpacity
                       style={[
                         styles.button,
+                        { backgroundColor: colors.buttonBackground },
                         !canSubmit && styles.buttonDisabled,
                       ]}
                       onPress={onSignUp}
                       disabled={!canSubmit}
                       activeOpacity={0.85}
                     >
-                      <Text style={styles.buttonText}>
+                      <Text
+                        style={[
+                          styles.buttonText,
+                          { color: colors.buttonText },
+                        ]}
+                      >
                         {submitting ? 'Creating...' : 'Create account'}
                       </Text>
                     </TouchableOpacity>
@@ -150,30 +190,49 @@ export default function SignUpScreen() {
                 ) : (
                   <>
                     <View>
-                      <Text style={styles.label}>Verification code</Text>
+                      <Text style={[styles.label, { color: colors.textMuted }]}>
+                        Verification code
+                      </Text>
                       <TextInput
                         autoCapitalize="none"
                         keyboardType="number-pad"
                         placeholder="Enter code"
-                        placeholderTextColor="#6F6F6F"
-                        style={styles.input}
+                        placeholderTextColor={colors.placeholder}
+                        style={[
+                          styles.input,
+                          {
+                            borderColor: colors.border,
+                            backgroundColor: colors.inputBackground,
+                            color: colors.textPrimary,
+                          },
+                        ]}
                         value={code}
                         onChangeText={setCode}
                       />
                     </View>
 
-                    {error ? <Text style={styles.error}>{error}</Text> : null}
+                    {error ? (
+                      <Text style={[styles.error, { color: colors.error }]}>
+                        {error}
+                      </Text>
+                    ) : null}
 
                     <TouchableOpacity
                       style={[
                         styles.button,
+                        { backgroundColor: colors.buttonBackground },
                         !canVerify && styles.buttonDisabled,
                       ]}
                       onPress={onVerify}
                       disabled={!canVerify}
                       activeOpacity={0.85}
                     >
-                      <Text style={styles.buttonText}>
+                      <Text
+                        style={[
+                          styles.buttonText,
+                          { color: colors.buttonText },
+                        ]}
+                      >
                         {submitting ? 'Verifying...' : 'Verify email'}
                       </Text>
                     </TouchableOpacity>
@@ -181,10 +240,15 @@ export default function SignUpScreen() {
                 )}
 
                 <View style={styles.footer}>
-                  <Text style={styles.footerText}>
+                  <Text
+                    style={[styles.footerText, { color: colors.textSubtle }]}
+                  >
                     Already have an account?
                   </Text>
-                  <Link href="/sign-in" style={styles.link}>
+                  <Link
+                    href="/sign-in"
+                    style={[styles.link, { color: colors.textPrimary }]}
+                  >
                     Sign in
                   </Link>
                 </View>
@@ -200,7 +264,7 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0B0B0E',
+    backgroundColor: AuthColors.dark.background,
   },
   flex: {
     flex: 1,
@@ -220,18 +284,18 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '600',
-    color: '#F5F5F7',
+    color: AuthColors.dark.textPrimary,
   },
   subtitle: {
     marginTop: 6,
     fontSize: 14,
-    color: '#9A9AA0',
+    color: AuthColors.dark.textSecondary,
   },
   form: {
     gap: 16,
   },
   label: {
-    color: '#B8B8BD',
+    color: AuthColors.dark.textMuted,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
@@ -241,10 +305,10 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#24242A',
-    backgroundColor: '#14141A',
+    borderColor: AuthColors.dark.border,
+    backgroundColor: AuthColors.dark.inputBackground,
     paddingHorizontal: 14,
-    color: '#F5F5F7',
+    color: AuthColors.dark.textPrimary,
   },
   button: {
     marginTop: 20,
@@ -252,7 +316,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F5F5F7',
+    backgroundColor: AuthColors.dark.buttonBackground,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -260,10 +324,10 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#0B0B0E',
+    color: AuthColors.dark.buttonText,
   },
   error: {
-    color: '#F36A6A',
+    color: AuthColors.dark.error,
     fontSize: 13,
   },
   footer: {
@@ -271,11 +335,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerText: {
-    color: '#8B8B92',
+    color: AuthColors.dark.textSubtle,
     marginBottom: 8,
   },
   link: {
-    color: '#F5F5F7',
+    color: AuthColors.dark.textPrimary,
     fontSize: 15,
     fontWeight: '600',
     textDecorationLine: 'underline',
