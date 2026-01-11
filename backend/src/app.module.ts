@@ -15,6 +15,7 @@ import { PrismaModule } from 'nestjs-prisma';
     PrismaModule.forRoot({
       isGlobal: true,
     }),
+    PrismaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
