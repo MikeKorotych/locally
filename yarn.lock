@@ -11202,6 +11202,7 @@ __metadata:
   resolution: "locally-root@workspace:."
   dependencies:
     husky: "npm:^8.0.0"
+    lottie-react-native: "npm:^7.3.5"
   languageName: unknown
   linkType: soft
 
@@ -11298,6 +11299,23 @@ __metadata:
   bin:
     loose-envify: cli.js
   checksum: 10c0/655d110220983c1a4b9c0c679a2e8016d4b67f6e9c7b5435ff5979ecdb20d0813f4dec0a08674fcbdd4846a3f07edbb50a36811fd37930b94aaa0d9daceb017e
+  languageName: node
+  linkType: hard
+
+"lottie-react-native@npm:^7.3.5":
+  version: 7.3.5
+  resolution: "lottie-react-native@npm:7.3.5"
+  peerDependencies:
+    "@lottiefiles/dotlottie-react": ^0.13.5
+    react: "*"
+    react-native: ">=0.46"
+    react-native-windows: ">=0.63.x"
+  peerDependenciesMeta:
+    "@lottiefiles/dotlottie-react":
+      optional: true
+    react-native-windows:
+      optional: true
+  checksum: 10c0/db84e188b25d15c7b92b15104e18b7f925e31ac0a0293d2e3ad9ee70a4834220e57e7e4535a493cd89ba9a008e41a555b40d9f88fccd8216d22c106b76d71174
   languageName: node
   linkType: hard
 
