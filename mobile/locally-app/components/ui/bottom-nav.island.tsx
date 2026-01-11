@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { IconSymbol, type IconSymbolName } from '@/components/ui/icon-symbol';
+import { Svg, Path } from 'react-native-svg';
 
 type FlipVariant = 'icon' | 'button';
 type InteractionMode = 'tap' | 'swipe';
@@ -50,7 +51,14 @@ export default function BottomNavBar(props: BottomNavBarProps) {
   const animatedRotation = useSharedValue(activeIndex * 180);
 
   const animatedStyle = useAnimatedStyle(() => {
-    return { transform: [{ rotateY: animatedRotation.value + 'deg' }] };
+    const scale = interpolate(
+      Math.abs(((animatedRotation.value % 360) + 360) % 360),
+      [0, 90, 180, 270, 360],
+      [1, 1.3, 1, 1.3, 1]
+    );
+    return {
+      transform: [{ rotateY: animatedRotation.value + 'deg' }, { scale }],
+    };
   });
 
   const frontAnimatedStyle = useAnimatedStyle(() => {
@@ -89,10 +97,36 @@ export default function BottomNavBar(props: BottomNavBarProps) {
 
   const iconColor = isLight ? '#000' : '#fff';
   const frontIcon = (
-    <IconSymbol size={28} name={primaryIconName} color={iconColor} />
+    <Svg
+      fill="none"
+      viewBox="0 0 24 24"
+      width={28}
+      height={28}
+      strokeWidth={1.5}
+      stroke={iconColor}
+    >
+      <Path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+      />
+    </Svg>
   );
   const backIcon = (
-    <IconSymbol size={28} name={secondaryIconName} color={iconColor} />
+    <Svg
+      fill="none"
+      viewBox="0 0 24 24"
+      width={28}
+      height={28}
+      strokeWidth={1.5}
+      stroke={iconColor}
+    >
+      <Path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+      />
+    </Svg>
   );
 
   const switchToIndex = (nextIndex: number) => {
@@ -136,8 +170,10 @@ export default function BottomNavBar(props: BottomNavBarProps) {
 
   const shadowRadius = isLight ? 3 : 6;
 
+  const elevation = isLight ? 3 : 6;
+
   const borderColor = isLight
-    ? 'rgba(0, 0, 0, 0.04)'
+    ? 'rgba(0, 0, 0, 0.1)'
     : 'rgba(255, 255, 255, 0.08)';
 
   const buttonStyle = [
@@ -165,7 +201,7 @@ export default function BottomNavBar(props: BottomNavBarProps) {
               style={[
                 styles.shadowWrap,
                 buttonStyle,
-                { shadowColor, shadowRadius, borderColor },
+                { shadowColor, shadowRadius, borderColor, elevation },
               ]}
             >
               {flipVariant === 'icon' ? (
@@ -173,7 +209,7 @@ export default function BottomNavBar(props: BottomNavBarProps) {
                   <Animated.View style={[styles.iconFace, frontAnimatedStyle]}>
                     {frontIcon}
                   </Animated.View>
-                  <Animated.View style={[styles.iconFace, backAnimatedStyle]}>
+                  <Animated.View style={[styles.backFace, backAnimatedStyle]}>
                     {backIcon}
                   </Animated.View>
                 </View>
@@ -203,7 +239,6 @@ const styles = StyleSheet.create({
     // shadow for iOS + elevation for Android
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.5,
-    elevation: 4,
     borderWidth: 1,
     borderRadius: 99,
   },
@@ -213,7 +248,7 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: Platform.select({ ios: 0.5, android: 0 }),
+    borderWidth: Platform.select({ ios: 1, android: 1 }),
     borderColor: 'rgba(0, 0, 0, 0.08)',
   },
   swipeZone: {
@@ -229,6 +264,11 @@ const styles = StyleSheet.create({
   iconFace: {
     position: 'absolute',
     left: '2%',
+    backfaceVisibility: 'hidden',
+  },
+  backFace: {
+    position: 'absolute',
+    right: '2%',
     backfaceVisibility: 'hidden',
   },
 });

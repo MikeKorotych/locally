@@ -19,6 +19,7 @@ export default function TabLayout() {
       tabBarPosition="bottom"
       screenOptions={{
         swipeEnabled: true,
+        // headerShown: false,
       }}
       tabBar={(props) => (
         <BottomNavBar
@@ -30,7 +31,10 @@ export default function TabLayout() {
         />
       )}
     >
-      <MaterialTabs.Screen name="index" options={{ title: 'Profile' }} />
+      <MaterialTabs.Screen
+        name="index"
+        options={{ title: 'Profile', headerShown: false }}
+      />
       <MaterialTabs.Screen name="explore" options={{ title: 'Search' }} />
     </MaterialTabs>
   );
