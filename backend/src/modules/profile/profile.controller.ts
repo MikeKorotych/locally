@@ -1,8 +1,8 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { ClerkUserId } from 'src/decorators/clerk.decorator';
-import { PROFILE_ENUMS } from 'src/enums/routes.enums';
 import { ClerkAuthGuard } from 'src/guards/clerk.guard';
 import { ProfileService } from './profile.service';
+import { PROFILE_ENUMS } from 'src/enums/routes.enums';
 import { User } from '@prisma/client';
 
 @UseGuards(ClerkAuthGuard)
