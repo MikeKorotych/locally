@@ -1,3 +1,5 @@
 .env
 .env.production
 .yarn/unplugged
+node_modules
+dist
