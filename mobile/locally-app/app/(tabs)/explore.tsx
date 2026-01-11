@@ -262,7 +262,9 @@ export default function ProfileScreen() {
   );
 }
 
-const createStyles = (colors: typeof ProfileColors.dark) =>
+const createStyles = (
+  colors: typeof ProfileColors.light | typeof ProfileColors.dark
+) =>
   StyleSheet.create({
     safeArea: {
       flex: 1,
