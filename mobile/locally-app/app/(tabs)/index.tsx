@@ -22,6 +22,69 @@ export default function HomeScreen() {
   const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const mapRef = useRef<MapView>(null);
+  const [animatedPlaceholder, setAnimatedPlaceholder] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+    const words = ['neighbors', 'skills', 'items'];
+    const prefix = 'Search for ';
+
+    const sleep = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
+
+    const animate = async () => {
+      while (isMounted) {
+        // 1. Type "Search for "
+        let currentText = '';
+        for (let i = 0; i <= prefix.length; i++) {
+          if (!isMounted) return;
+          currentText = prefix.slice(0, i);
+          setAnimatedPlaceholder(currentText);
+          await sleep(60);
+        }
+
+        // 2. Cycle through words
+        for (let index = 0; index < words.length; index++) {
+          const word = words[index];
+
+          // Type the word
+          for (let i = 1; i <= word.length; i++) {
+            if (!isMounted) return;
+            setAnimatedPlaceholder(prefix + word.slice(0, i));
+            await sleep(60);
+          }
+
+          await sleep(1500); // Pause to read
+
+          // If not the last word, erase only the word
+          if (index < words.length - 1) {
+            for (let i = word.length - 1; i >= 0; i--) {
+              if (!isMounted) return;
+              setAnimatedPlaceholder(prefix + word.slice(0, i));
+              await sleep(30);
+            }
+            await sleep(150);
+          }
+        }
+
+        // 3. Erase everything after the last word
+        const fullText = prefix + words[words.length - 1];
+        for (let i = fullText.length - 1; i >= 0; i--) {
+          if (!isMounted) return;
+          setAnimatedPlaceholder(fullText.slice(0, i));
+          await sleep(30);
+        }
+
+        await sleep(400); // Small pause before restarting
+      }
+    };
+
+    void animate();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleCenterMap = async () => {
     try {
@@ -93,13 +156,25 @@ export default function HomeScreen() {
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholder="Search for neighbors, skills, or items"
+            placeholder={animatedPlaceholder}
             placeholderTextColor={colors.textSubtle}
             style={styles.searchInput}
             returnKeyType="search"
           />
-          <Svg fill="none" viewBox="0 0 24 24" width={20} height={20} strokeWidth={1.5} stroke={colors.textSubtle} style={styles.searchIconRight}>
-            <Path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+          <Svg
+            fill="none"
+            viewBox="0 0 24 24"
+            width={20}
+            height={20}
+            strokeWidth={1.5}
+            stroke={colors.textSubtle}
+            style={styles.searchIconRight}
+          >
+            <Path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"
+            />
           </Svg>
         </View>
       </View>
