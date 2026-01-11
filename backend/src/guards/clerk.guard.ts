@@ -10,9 +10,11 @@ import { createClerkClient } from '@clerk/clerk-sdk-node';
 @Injectable()
 export class ClerkAuthGuard implements CanActivate {
   private readonly logger = new Logger(ClerkAuthGuard.name);
+
   private clerk = createClerkClient({
     secretKey: process.env.CLERK_SECRET_KEY!,
     publishableKey: process.env.CLERK_PUBLISHABLE_KEY!,
+    jwtKey: process.env.CLERK_JWT_KEY,
   });
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -23,12 +25,13 @@ export class ClerkAuthGuard implements CanActivate {
     this.logger.debug(
       `🔐 ClerkAuthGuard: Auth header present: ${!!authHeader}`,
     );
-    if (typeof authHeader !== 'string' || !authHeader) {
+
+    if (!authHeader || typeof authHeader !== 'string') {
       this.logger.warn('🔐 ClerkAuthGuard: No Authorization header');
       throw new UnauthorizedException('No Authorization header');
     }
 
-    const token = authHeader.slice(7);
+    const token = authHeader.replace(/^Bearer\s+/i, '');
     this.logger.log(
       `🔐 ClerkAuthGuard: Token extracted, length: ${token.length}`,
     );
@@ -52,6 +55,7 @@ export class ClerkAuthGuard implements CanActivate {
           exp: payload.exp,
         })}`,
       );
+
       req.auth = {
         clerkUserId: payload.sub,
         sessionId: payload.sid,
@@ -64,6 +68,13 @@ export class ClerkAuthGuard implements CanActivate {
 
       return true;
     } catch (err: any) {
+      // If JWK fetch fails and CLERK_JWT_KEY is not set, log more info
+      if (err?.reason === 'jwk-failed-to-resolve') {
+        this.logger.error(
+          `🔐 ClerkAuthGuard: JWK resolution failed. Make sure CLERK_JWT_KEY is set in prod.`,
+        );
+      }
+
       this.logger.warn(
         `🔐 ClerkAuthGuard: Token verification failed: ${err?.message ?? err}`,
         err,
