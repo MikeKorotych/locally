@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config/dist/config.module';
 import { PrismaModule } from 'nestjs-prisma';
+import { ProfileModule } from './modules/profile/profile.module';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { PrismaModule } from 'nestjs-prisma';
     PrismaModule.forRoot({
       isGlobal: true,
     }),
-    PrismaModule,
+    ProfileModule,
   ],
   controllers: [AppController],
   providers: [AppService],
