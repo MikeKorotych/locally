@@ -21,7 +21,6 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.SSH_KEY }}
-          debug: true
           command_timeout: 20m
           script: |
             set -euo pipefail
