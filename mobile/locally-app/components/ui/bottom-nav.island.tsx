@@ -51,7 +51,14 @@ export default function BottomNavBar(props: BottomNavBarProps) {
   const animatedRotation = useSharedValue(activeIndex * 180);
 
   const animatedStyle = useAnimatedStyle(() => {
-    return { transform: [{ rotateY: animatedRotation.value + 'deg' }] };
+    const scale = interpolate(
+      Math.abs(((animatedRotation.value % 360) + 360) % 360),
+      [0, 90, 180, 270, 360],
+      [1, 1.3, 1, 1.3, 1]
+    );
+    return {
+      transform: [{ rotateY: animatedRotation.value + 'deg' }, { scale }],
+    };
   });
 
   const frontAnimatedStyle = useAnimatedStyle(() => {
