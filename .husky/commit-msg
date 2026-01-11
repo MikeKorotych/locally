@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+# Run commit message format check (resolve script from repo root)
+node "$(git rev-parse --show-toplevel)/scripts/check-commit-msg.js" "$1"

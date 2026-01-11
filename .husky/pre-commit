@@ -1,0 +1,2 @@
+# Run prettier on staged files
+yarn --cwd backend lint-staged
