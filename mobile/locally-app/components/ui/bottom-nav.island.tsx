@@ -1,110 +1,163 @@
-import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import React, { useEffect, useRef } from 'react';
 import {
-  createMaterialTopTabNavigator,
-  MaterialTopTabBar,
-} from '@react-navigation/material-top-tabs';
-import { withLayoutContext } from 'expo-router';
+  View,
+  StyleSheet,
+  Platform,
+  Animated,
+  Pressable,
+  PanResponder,
+} from 'react-native';
+import { type MaterialTopTabBarProps } from '@react-navigation/material-top-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { IconSymbol, type IconSymbolName } from '@/components/ui/icon-symbol';
 
-const { Navigator, Screen } = createMaterialTopTabNavigator();
-const MaterialTabs = withLayoutContext(Navigator);
+type FlipVariant = 'icon' | 'button';
+type InteractionMode = 'tap' | 'swipe';
 
-export default function BottomNav() {
-  const colorScheme = useColorScheme();
+export type BottomNavProps = {
+  flipVariant?: FlipVariant;
+  interactionMode?: InteractionMode;
+  primaryIconName?: IconSymbolName;
+  secondaryIconName?: IconSymbolName;
+};
+
+type BottomNavBarProps = MaterialTopTabBarProps & Required<BottomNavProps>;
+
+export default function BottomNavBar(props: BottomNavBarProps) {
+  const {
+    state,
+    navigation,
+    flipVariant,
+    interactionMode,
+    primaryIconName,
+    secondaryIconName,
+  } = props;
   const insets = useSafeAreaInsets();
-  const theme = Colors[colorScheme ?? 'light'];
+  const routes = state.routes.slice(0, 2);
+  const activeIndex = Math.min(state.index, routes.length - 1);
+  const activeRoute = routes[activeIndex];
+  const flipAnim = useRef(new Animated.Value(activeIndex)).current;
+
+  useEffect(() => {
+    Animated.timing(flipAnim, {
+      toValue: activeIndex,
+      duration: 240,
+      useNativeDriver: true,
+    }).start();
+  }, [activeIndex, flipAnim]);
+
+  const rotation = flipAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+  const frontRotate = flipAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+  const backRotate = flipAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['-180deg', '0deg'],
+  });
+  const frontOpacity = flipAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [1, 0, 0],
+  });
+  const backOpacity = flipAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0, 0, 1],
+  });
+
+  const iconColor = '#fff';
+  const frontIcon = (
+    <IconSymbol size={28} name={primaryIconName} color={iconColor} />
+  );
+  const backIcon = (
+    <IconSymbol size={28} name={secondaryIconName} color={iconColor} />
+  );
+
+  const switchToIndex = (nextIndex: number) => {
+    const targetIndex = Math.max(0, Math.min(nextIndex, routes.length - 1));
+    const targetRoute = routes[targetIndex];
+    if (!targetRoute || targetRoute.key === activeRoute.key) return;
+    navigation.navigate(targetRoute.name as never);
+  };
+
+  const handlePress = () => {
+    if (interactionMode === 'swipe') return;
+    const nextIndex = activeIndex === 0 ? 1 : 0;
+    switchToIndex(nextIndex);
+  };
+
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (_, gesture) => {
+      if (interactionMode !== 'swipe') return false;
+      const isHorizontal = Math.abs(gesture.dx) > Math.abs(gesture.dy);
+      return isHorizontal && Math.abs(gesture.dx) > 8;
+    },
+    onPanResponderRelease: (_, gesture) => {
+      if (interactionMode !== 'swipe') return;
+      if (gesture.dx > 20) {
+        switchToIndex(activeIndex - 1);
+      } else if (gesture.dx < -20) {
+        switchToIndex(activeIndex + 1);
+      }
+    },
+  });
+
+  const buttonStyle = [
+    styles.circleButton,
+    {
+      backgroundColor: '#000',
+    },
+    flipVariant === 'button'
+      ? { transform: [{ perspective: 800 }, { rotateY: rotation }] }
+      : null,
+  ];
 
   return (
-    <MaterialTabs
-      tabBarPosition="bottom"
-      screenOptions={{
-        swipeEnabled: true,
-        tabBarShowIcon: true,
-        // single-color: black background + white UI elements
-        tabBarActiveTintColor: '#fff',
-        tabBarInactiveTintColor: 'rgba(255,255,255,0.65)',
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '600', color: '#fff' },
-        tabBarIndicatorStyle: {
-          backgroundColor: '#fff',
-          height: 3,
-          borderRadius: 5,
-          marginHorizontal: 16,
-        },
-        tabBarPressColor: 'rgb(0, 0, 0)',
-      }}
-      tabBar={(props) => {
-        // limit rendered tabs to first two routes
-        const limitedRoutes = props.state.routes.slice(0, 2);
-        const limitedState = {
-          ...props.state,
-          routes: limitedRoutes,
-          index: Math.min(props.state.index, limitedRoutes.length - 1),
-        };
-        const limitedDescriptors = limitedRoutes.reduce<Record<string, any>>(
-          (acc, r) => {
-            if (props.descriptors[r.key]) acc[r.key] = props.descriptors[r.key];
-            return acc;
-          },
-          {}
-        );
-
-        const limitedProps = {
-          ...props,
-          state: limitedState,
-          descriptors: limitedDescriptors,
-        };
-
-        return (
-          <View
-            pointerEvents="box-none"
-            style={[styles.safeArea, { bottom: insets.bottom + 12 }]}
-          >
-            {/* single color island — black background */}
-            <View
-              style={[
-                styles.container,
-                {
-                  backgroundColor: '#000',
-                  shadowColor: '#000',
-                  borderWidth: 0,
-                },
-              ]}
-            >
-              <MaterialTopTabBar
-                {...(limitedProps as any)}
-                style={[styles.tabBar, { backgroundColor: 'transparent' }]}
-                pressOpacity={0.85}
-              />
-            </View>
-          </View>
-        );
-      }}
+    <View
+      pointerEvents="box-none"
+      style={[styles.safeArea, { bottom: insets.bottom + 12 }]}
     >
-      <Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }: { color: string }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
-          ),
-        }}
-        component={() => null}
-      />
-      <Screen
-        name="explore"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color }: { color: string }) => (
-            <IconSymbol size={28} name="person.fill" color={color} />
-          ),
-        }}
-        component={() => null}
-      />
-    </MaterialTabs>
+      <Animated.View style={styles.shadowWrap}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={handlePress}
+          disabled={interactionMode === 'swipe'}
+          style={buttonStyle}
+          {...(interactionMode === 'swipe' ? panResponder.panHandlers : {})}
+        >
+          {flipVariant === 'icon' ? (
+            <View style={styles.iconFlipWrap}>
+              <Animated.View
+                style={[
+                  styles.iconFace,
+                  {
+                    opacity: frontOpacity,
+                    transform: [{ perspective: 800 }, { rotateY: frontRotate }],
+                  },
+                ]}
+              >
+                {frontIcon}
+              </Animated.View>
+              <Animated.View
+                style={[
+                  styles.iconFace,
+                  {
+                    opacity: backOpacity,
+                    transform: [{ perspective: 800 }, { rotateY: backRotate }],
+                  },
+                ]}
+              >
+                {backIcon}
+              </Animated.View>
+            </View>
+          ) : (
+            frontIcon
+          )}
+        </Pressable>
+      </Animated.View>
+    </View>
   );
 }
 
@@ -117,21 +170,32 @@ const styles = StyleSheet.create({
     zIndex: 100,
     alignItems: 'center',
   },
-  container: {
-    width: '100%',
-    borderRadius: 28,
-    paddingVertical: Platform.select({ ios: 10, android: 6 }),
-    paddingHorizontal: 8,
+  shadowWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
     // shadow for iOS
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.12,
     shadowRadius: 12,
     elevation: 8,
-    overflow: 'hidden', // clip indicator and ensure a single-color island
   },
-  tabBar: {
-    backgroundColor: 'transparent',
-    elevation: 0,
-    shadowOpacity: 0,
+  circleButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: Platform.select({ ios: 0.5, android: 0 }),
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+  },
+  iconFlipWrap: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconFace: {
+    position: 'absolute',
+    backfaceVisibility: 'hidden',
   },
 });

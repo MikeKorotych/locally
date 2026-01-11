@@ -1,7 +1,11 @@
-import { Redirect } from 'expo-router';
+import { Redirect, withLayoutContext } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import React from 'react';
-import BottomNav from '../../components/ui/bottom-nav.island';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import BottomNavBar from '../../components/ui/bottom-nav.island';
+
+const { Navigator } = createMaterialTopTabNavigator();
+const MaterialTabs = withLayoutContext(Navigator);
 
 export default function TabLayout() {
   const { isSignedIn } = useAuth();
@@ -10,5 +14,24 @@ export default function TabLayout() {
     return <Redirect href="/sign-in" />;
   }
 
-  return <BottomNav />;
+  return (
+    <MaterialTabs
+      tabBarPosition="bottom"
+      screenOptions={{
+        swipeEnabled: true,
+      }}
+      tabBar={(props) => (
+        <BottomNavBar
+          {...props}
+          flipVariant="icon"
+          interactionMode="tap"
+          primaryIconName="person.fill"
+          secondaryIconName="magnifyingglass"
+        />
+      )}
+    >
+      <MaterialTabs.Screen name="index" options={{ title: 'Profile' }} />
+      <MaterialTabs.Screen name="explore" options={{ title: 'Search' }} />
+    </MaterialTabs>
+  );
 }
