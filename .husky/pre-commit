@@ -1,2 +1,5 @@
-# Run prettier on staged files
-yarn --cwd backend lint-staged
+#!/bin/sh
+# Fix for Yarn Berry + Husky
+unset GIT_INDEX_FILE
+cd "$(dirname "$0")/.."
+corepack yarn workspace backend lint-staged

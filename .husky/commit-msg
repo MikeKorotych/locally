@@ -1,3 +1,5 @@
-#!/usr/bin/env sh
-# Run commit message format check (resolve script from repo root)
-node "$(git rev-parse --show-toplevel)/scripts/check-commit-msg.js" "$1"
+#!/bin/sh
+# Fix for Yarn Berry + Husky
+unset GIT_INDEX_FILE
+cd "$(dirname "$0")/.."
+node scripts/check-commit-msg.js "$1"
