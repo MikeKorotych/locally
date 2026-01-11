@@ -1,2 +1,6 @@
 # Run prettier on staged files
 yarn --cwd backend lint-staged
+
+chmod +x .husky/pre-commit
+git add .husky/pre-commit
+git commit -m "chore(husky): make pre-commit hook executable"
