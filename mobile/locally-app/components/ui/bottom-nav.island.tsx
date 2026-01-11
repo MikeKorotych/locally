@@ -109,6 +109,16 @@ export default function BottomNavBar(props: BottomNavBarProps) {
     },
   });
 
+  const shadowColor = isLight
+    ? 'rgba(0, 0, 0, 0.6)'
+    : 'rgba(255, 255, 255, 0.2)';
+
+  const shadowRadius = isLight ? 3 : 6;
+
+  const borderColor = isLight
+    ? 'rgba(0, 0, 0, 0.04)'
+    : 'rgba(255, 255, 255, 0.08)';
+
   const buttonStyle = [
     styles.circleButton,
     {
@@ -122,9 +132,11 @@ export default function BottomNavBar(props: BottomNavBarProps) {
   return (
     <View
       pointerEvents="box-none"
-      style={[styles.safeArea, { bottom: insets.bottom + 12 }]}
+      style={[styles.safeArea, { bottom: insets.bottom + 36 }]}
     >
-      <Animated.View style={styles.shadowWrap}>
+      <Animated.View
+        style={[styles.shadowWrap, { shadowColor, shadowRadius, borderColor }]}
+      >
         <Pressable
           accessibilityRole="button"
           onPress={handlePress}
@@ -178,11 +190,12 @@ const styles = StyleSheet.create({
   shadowWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    // shadow for iOS
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 8,
+    // shadow for iOS + elevation for Android
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    elevation: 4,
+    borderWidth: 1,
+    borderRadius: 99,
   },
   circleButton: {
     width: 56,
