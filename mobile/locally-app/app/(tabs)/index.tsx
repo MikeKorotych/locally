@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { ProfileColors } from '@/utils/colors';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Svg, Path } from 'react-native-svg';
 
 export default function HomeScreen() {
   const [region, setRegion] = useState<Region>({
@@ -97,6 +98,9 @@ export default function HomeScreen() {
             style={styles.searchInput}
             returnKeyType="search"
           />
+          <Svg fill="none" viewBox="0 0 24 24" width={20} height={20} strokeWidth={1.5} stroke={colors.textSubtle} style={styles.searchIconRight}>
+            <Path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+          </Svg>
         </View>
       </View>
       <Pressable
@@ -138,6 +142,9 @@ const createStyles = (
     },
     searchIcon: {
       marginRight: 10,
+    },
+    searchIconRight: {
+      marginLeft: 10,
     },
     searchInput: {
       flex: 1,
