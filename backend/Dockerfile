@@ -34,11 +34,16 @@ ENV NPM_CONFIG_CACHE=/home/app/.npm
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
 
 # ensure home and app dirs exist and are writable by the app user
 RUN mkdir -p /home/app/.npm \
   && chown -R app:app /home/app /app \
   && chmod -R 700 /home/app
+
+# install OpenSSL for Prisma native binaries and set helpful Prisma env flags
+RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/* \
+  && export PRISMA_TELEMETRY_DISABLE=1 PRISMA_HIDE_UPDATE_MESSAGE=1
 
 ENV NODE_ENV=production
 EXPOSE 3000
