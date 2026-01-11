@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSignUp } from '@clerk/clerk-expo';
+import { AuthColors } from '../../utils/colors';
 
 export default function SignUpScreen() {
   const { signUp, setActive, isLoaded } = useSignUp();
@@ -110,7 +111,7 @@ export default function SignUpScreen() {
                         autoComplete="email"
                         keyboardType="email-address"
                         placeholder="you@example.com"
-                        placeholderTextColor="#6F6F6F"
+                        placeholderTextColor={AuthColors.placeholder}
                         style={styles.input}
                         value={email}
                         onChangeText={setEmail}
@@ -123,7 +124,7 @@ export default function SignUpScreen() {
                         autoCapitalize="none"
                         autoComplete="password"
                         placeholder="••••••••"
-                        placeholderTextColor="#6F6F6F"
+                        placeholderTextColor={AuthColors.placeholder}
                         secureTextEntry
                         style={styles.input}
                         value={password}
@@ -155,7 +156,7 @@ export default function SignUpScreen() {
                         autoCapitalize="none"
                         keyboardType="number-pad"
                         placeholder="Enter code"
-                        placeholderTextColor="#6F6F6F"
+                        placeholderTextColor={AuthColors.placeholder}
                         style={styles.input}
                         value={code}
                         onChangeText={setCode}
@@ -200,7 +201,7 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0B0B0E',
+    backgroundColor: AuthColors.background,
   },
   flex: {
     flex: 1,
@@ -220,18 +221,18 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '600',
-    color: '#F5F5F7',
+    color: AuthColors.textPrimary,
   },
   subtitle: {
     marginTop: 6,
     fontSize: 14,
-    color: '#9A9AA0',
+    color: AuthColors.textSecondary,
   },
   form: {
     gap: 16,
   },
   label: {
-    color: '#B8B8BD',
+    color: AuthColors.textMuted,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
@@ -241,10 +242,10 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#24242A',
-    backgroundColor: '#14141A',
+    borderColor: AuthColors.border,
+    backgroundColor: AuthColors.inputBackground,
     paddingHorizontal: 14,
-    color: '#F5F5F7',
+    color: AuthColors.textPrimary,
   },
   button: {
     marginTop: 20,
@@ -252,7 +253,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F5F5F7',
+    backgroundColor: AuthColors.buttonBackground,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -260,10 +261,10 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#0B0B0E',
+    color: AuthColors.buttonText,
   },
   error: {
-    color: '#F36A6A',
+    color: AuthColors.error,
     fontSize: 13,
   },
   footer: {
@@ -271,11 +272,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerText: {
-    color: '#8B8B92',
+    color: AuthColors.textSubtle,
     marginBottom: 8,
   },
   link: {
-    color: '#F5F5F7',
+    color: AuthColors.textPrimary,
     fontSize: 15,
     fontWeight: '600',
     textDecorationLine: 'underline',
