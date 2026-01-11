@@ -41,7 +41,7 @@ jobs:
 
             # Build backend
             cd backend
-            sudo docker build -t locally-backend .
+            sudo docker build --build-arg DATABASE_URL="${{ secrets.DATABASE_URL }}" -t locally-backend .
             cd ..
 
             # Write single DATABASE_URL env file
