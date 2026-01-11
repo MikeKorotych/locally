@@ -7,12 +7,6 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
-enum Role {
-  BUSINESS
-  CUSTOMER
-}
-
 model User {
   id        String  @id @default(uuid())
   clerkId   String  @unique @map("clerk_id")
@@ -20,10 +14,41 @@ model User {
   firstName String? @map("first_name")
   lastName  String? @map("last_name")
 
-  role Role @default(CUSTOMER)
+  location  Location? @relation(fields: [locationId], references: [id])
+  locationId String?  @unique @map("location_id")
+
+  notifications Notification[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("users")
+}
+
+model Location {
+  id        String  @id @default(uuid())
+  latitude  Float
+  longitude Float
+
+  user      User?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("locations")
+}
+
+model Notification {
+  id        String  @id @default(uuid())
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String  @map("user_id")
+  message   String
+  read      Boolean @default(false)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([userId, read])
+  @@map("notifications")
 }
