@@ -94,19 +94,6 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.iconButton}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.iconText}>{'<'}</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Profile</Text>
-        <TouchableOpacity style={styles.iconButton}>
-          <Text style={styles.iconText}>...</Text>
-        </TouchableOpacity>
-      </View>
-
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -270,15 +257,6 @@ const createStyles = (
       flex: 1,
       backgroundColor: colors.background,
     },
-    header: {
-      paddingHorizontal: 20,
-      paddingVertical: 12,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      borderBottomWidth: 1,
-      borderBottomColor: colors.surface,
-    },
     iconButton: {
       width: 36,
       height: 36,
@@ -312,6 +290,9 @@ const createStyles = (
       backgroundColor: colors.surface,
       alignItems: 'center',
       justifyContent: 'center',
+
+      borderWidth: 1,
+      borderColor: colors.border,
     },
     avatar: {
       width: 86,
