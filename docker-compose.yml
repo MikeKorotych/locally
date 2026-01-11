@@ -5,14 +5,7 @@ services:
     image: locally-backend
     container_name: locally_backend
     restart: always
-    command: >
-      sh -c "
-        npx prisma generate &&
-        npx prisma migrate deploy &&
-        npm run start:prod
-      "
     ports:
       - "8080:8080"
-    environment:
-      NODE_ENV: production
-      DATABASE_URL: ${DATABASE_URL}
+    env_file:
+      - .env.production
