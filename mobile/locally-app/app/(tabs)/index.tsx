@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { useEffect, useMemo, useState, useRef } from 'react';
+import { StyleSheet, TextInput, View, Pressable } from 'react-native';
 import MapView, { Marker, Region } from 'react-native-maps';
 import * as Location from 'expo-location';
+import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { ProfileColors } from '@/utils/colors';
@@ -19,6 +20,25 @@ export default function HomeScreen() {
   const colors = ProfileColors[theme];
   const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
+  const mapRef = useRef<MapView>(null);
+
+  const handleCenterMap = async () => {
+    try {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      const location = await Location.getCurrentPositionAsync({});
+      mapRef.current?.animateToRegion(
+        {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+          latitudeDelta: 0.012,
+          longitudeDelta: 0.012,
+        },
+        1000
+      );
+    } catch (error) {
+      console.error('Error centering map:', error);
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -52,11 +72,12 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <MapView
+        ref={mapRef}
         style={styles.map}
         provider="google"
         region={region}
         showsUserLocation
-        showsMyLocationButton
+        showsMyLocationButton={false}
       >
         <Marker coordinate={region} title="You are here" />
       </MapView>
@@ -78,6 +99,12 @@ export default function HomeScreen() {
           />
         </View>
       </View>
+      <Pressable
+        style={[styles.locationButton, { bottom: insets.bottom + 16 }]}
+        onPress={handleCenterMap}
+      >
+        <IconSymbol name="location.fill" size={24} color={colors.textPrimary} />
+      </Pressable>
     </View>
   );
 }
@@ -116,5 +143,22 @@ const createStyles = (
       flex: 1,
       color: colors.textPrimary,
       fontSize: 15,
+    },
+    locationButton: {
+      position: 'absolute',
+      right: 16,
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderWidth: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 4,
+      elevation: 4,
     },
   });
