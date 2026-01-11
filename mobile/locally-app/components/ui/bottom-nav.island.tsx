@@ -1,12 +1,17 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   StyleSheet,
   Platform,
-  Animated,
   Pressable,
   PanResponder,
 } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+  interpolate,
+} from 'react-native-reanimated';
 import { type MaterialTopTabBarProps } from '@react-navigation/material-top-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/theme';
@@ -41,36 +46,46 @@ export default function BottomNavBar(props: BottomNavBarProps) {
   const routes = state.routes.slice(0, 2);
   const activeIndex = Math.min(state.index, routes.length - 1);
   const activeRoute = routes[activeIndex];
-  const flipAnim = useRef(new Animated.Value(activeIndex)).current;
+
+  const animatedRotation = useSharedValue(activeIndex * 180);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return { transform: [{ rotateY: animatedRotation.value + 'deg' }] };
+  });
+
+  const frontAnimatedStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      animatedRotation.value,
+      [0, 90, 180],
+      [1, 0, 0]
+    );
+    return {
+      opacity,
+      transform: [
+        { perspective: 800 },
+        { rotateY: animatedRotation.value + 'deg' },
+      ],
+    };
+  });
+
+  const backAnimatedStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      animatedRotation.value,
+      [0, 90, 180],
+      [0, 0, 1]
+    );
+    return {
+      opacity,
+      transform: [
+        { perspective: 800 },
+        { rotateY: animatedRotation.value - 180 + 'deg' },
+      ],
+    };
+  });
 
   useEffect(() => {
-    Animated.timing(flipAnim, {
-      toValue: activeIndex,
-      duration: 240,
-      useNativeDriver: true,
-    }).start();
-  }, [activeIndex, flipAnim]);
-
-  const rotation = flipAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '180deg'],
-  });
-  const frontRotate = flipAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '180deg'],
-  });
-  const backRotate = flipAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['-180deg', '0deg'],
-  });
-  const frontOpacity = flipAnim.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [1, 0, 0],
-  });
-  const backOpacity = flipAnim.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [0, 0, 1],
-  });
+    animatedRotation.value = withTiming(activeIndex * 180, { duration: 240 });
+  }, [activeIndex, animatedRotation]);
 
   const iconColor = isLight ? '#000' : '#fff';
   const frontIcon = (
@@ -130,9 +145,6 @@ export default function BottomNavBar(props: BottomNavBarProps) {
     {
       backgroundColor: isLight ? Colors.light.background : '#000',
     },
-    flipVariant === 'button'
-      ? { transform: [{ perspective: 800 }, { rotateY: rotation }] }
-      : null,
   ];
 
   return (
@@ -145,51 +157,31 @@ export default function BottomNavBar(props: BottomNavBarProps) {
           style={styles.swipeZone}
           {...(interactionMode === 'swipe' ? panResponder.panHandlers : {})}
         >
-          <Pressable
-            accessibilityRole="button"
-            onPress={handlePress}
-            disabled={interactionMode === 'swipe'}
-            style={[
-              styles.shadowWrap,
-              buttonStyle,
-              { shadowColor, shadowRadius, borderColor },
-            ]}
-          >
-            {flipVariant === 'icon' ? (
-              <View style={styles.iconFlipWrap}>
-                <Animated.View
-                  style={[
-                    styles.iconFace,
-                    {
-                      opacity: frontOpacity,
-                      transform: [
-                        { perspective: 800 },
-                        { rotateY: frontRotate },
-                      ],
-                    },
-                  ]}
-                >
-                  {frontIcon}
-                </Animated.View>
-                <Animated.View
-                  style={[
-                    styles.iconFace,
-                    {
-                      opacity: backOpacity,
-                      transform: [
-                        { perspective: 800 },
-                        { rotateY: backRotate },
-                      ],
-                    },
-                  ]}
-                >
-                  {backIcon}
-                </Animated.View>
-              </View>
-            ) : (
-              frontIcon
-            )}
-          </Pressable>
+          <Animated.View style={animatedStyle}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={handlePress}
+              disabled={interactionMode === 'swipe'}
+              style={[
+                styles.shadowWrap,
+                buttonStyle,
+                { shadowColor, shadowRadius, borderColor },
+              ]}
+            >
+              {flipVariant === 'icon' ? (
+                <View style={styles.iconFlipWrap}>
+                  <Animated.View style={[styles.iconFace, frontAnimatedStyle]}>
+                    {frontIcon}
+                  </Animated.View>
+                  <Animated.View style={[styles.iconFace, backAnimatedStyle]}>
+                    {backIcon}
+                  </Animated.View>
+                </View>
+              ) : (
+                frontIcon
+              )}
+            </Pressable>
+          </Animated.View>
         </View>
       </Animated.View>
     </View>
