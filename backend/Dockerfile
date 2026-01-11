@@ -2,9 +2,9 @@
 FROM node:20 AS builder
 WORKDIR /app
 
-# install dependencies (use npm ci if you have package-lock.json)
+# install dependencies (use npm install to support repo without lockfile)
 COPY package*.json ./
-RUN npm ci
+RUN npm install --no-audit --no-fund
 
 # copy everything and set DATABASE_URL for prisma generate
 COPY . .
@@ -14,6 +14,9 @@ ENV DATABASE_URL=${DATABASE_URL}
 # generate prisma client and build the project
 RUN npx prisma generate
 RUN npm run build
+
+# prune dev dependencies before copying to runner stage
+RUN npm prune --production
 
 # Production stage
 FROM node:20-slim AS runner
