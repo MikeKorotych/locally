@@ -214,6 +214,7 @@ const styles = StyleSheet.create({
   },
   iconFace: {
     position: 'absolute',
+    left: 1,
     backfaceVisibility: 'hidden',
   },
 });
