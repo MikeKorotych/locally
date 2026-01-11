@@ -136,6 +136,8 @@ export default function BottomNavBar(props: BottomNavBarProps) {
 
   const shadowRadius = isLight ? 3 : 6;
 
+  const elevation = isLight ? 3 : 6;
+
   const borderColor = isLight
     ? 'rgba(0, 0, 0, 0.04)'
     : 'rgba(255, 255, 255, 0.08)';
@@ -165,7 +167,7 @@ export default function BottomNavBar(props: BottomNavBarProps) {
               style={[
                 styles.shadowWrap,
                 buttonStyle,
-                { shadowColor, shadowRadius, borderColor },
+                { shadowColor, shadowRadius, borderColor, elevation },
               ]}
             >
               {flipVariant === 'icon' ? (
@@ -203,7 +205,6 @@ const styles = StyleSheet.create({
     // shadow for iOS + elevation for Android
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.5,
-    elevation: 4,
     borderWidth: 1,
     borderRadius: 99,
   },
@@ -213,7 +214,7 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: Platform.select({ ios: 0.5, android: 0 }),
+    borderWidth: Platform.select({ ios: 1, android: 1 }),
     borderColor: 'rgba(0, 0, 0, 0.08)',
   },
   swipeZone: {
