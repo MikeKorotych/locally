@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'nestjs-prisma';
 import { clerkClient } from '@clerk/clerk-sdk-node';
-import { Role, User } from '@prisma/client';
+import { User } from 'src/types/user/user.types';
 
 @Injectable()
 export class ProfileService {
@@ -22,7 +22,6 @@ export class ProfileService {
           email,
           firstName,
           lastName,
-          role: Role.CUSTOMER,
         },
       });
       return newUser;
