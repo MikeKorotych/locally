@@ -9,10 +9,16 @@ RUN npm install
 
 COPY . .
 
-# Accept DATABASE_URL as build arg with a dummy default for build-time
-ARG DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
-ENV DATABASE_URL=$DATABASE_URL
+RUN npm run build
 
-RUN npx prisma generate
+EXPOSE 8080
 
-CMD ["sh", "-c", "until pg_isready -h \"$DB_HOST\" -p \"$DB_PORT\" -U \"$DB_USER\"; do echo 'Waiting for Postgres...'; sleep 2; done && npx prisma migrate deploy && npm run start:dev"]
+CMD ["sh", "-c", "\
+  until PGPASSWORD=$DB_PASSWORD pg_isready -h \"$DB_HOST\" -p \"$DB_PORT\" -U \"$DB_USER\"; do \
+    echo 'Waiting for Postgres...'; \
+    sleep 2; \
+  done && \
+  npx prisma generate && \
+  npx prisma migrate deploy && \
+  npm run start:prod \
+"]
