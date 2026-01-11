@@ -3944,6 +3944,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-native/normalize-colors@npm:0.76.8":
+  version: 0.76.8
+  resolution: "@react-native/normalize-colors@npm:0.76.8"
+  checksum: 10c0/7615a2bace4ce0c9e8ef70cfc10cdbcb44cd6fdbd5b4b22475f7cebba3a211a53bc2f8c9291896db777ebff0b789869a740d4d39247fd69639853070fc036b3e
+  languageName: node
+  linkType: hard
+
 "@react-native/normalize-colors@npm:0.81.5":
   version: 0.81.5
   resolution: "@react-native/normalize-colors@npm:0.81.5"
@@ -8469,6 +8476,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"expo-navigation-bar@npm:~4.0.7":
+  version: 4.0.9
+  resolution: "expo-navigation-bar@npm:4.0.9"
+  dependencies:
+    "@react-native/normalize-colors": "npm:0.76.8"
+    debug: "npm:^4.3.2"
+  peerDependencies:
+    expo: "*"
+    react: "*"
+    react-native: "*"
+  checksum: 10c0/786d8c754a8f1a1c197f68e87e8082a1e2a358676f247aca19f72a017a2a838f0b9c99154126bc03ebdf9478304c1c8b9072641451c231a7317920d0e7e23db9
+  languageName: node
+  linkType: hard
+
 "expo-router@npm:~6.0.21":
   version: 6.0.21
   resolution: "expo-router@npm:6.0.21"
@@ -11149,6 +11170,7 @@ __metadata:
     expo-image-picker: "npm:~17.0.10"
     expo-linking: "npm:~8.0.11"
     expo-location: "npm:^19.0.8"
+    expo-navigation-bar: "npm:~4.0.7"
     expo-router: "npm:~6.0.21"
     expo-secure-store: "npm:^15.0.8"
     expo-splash-screen: "npm:~31.0.13"

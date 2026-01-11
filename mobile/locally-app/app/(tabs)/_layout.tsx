@@ -13,6 +13,15 @@ const MaterialTabs = withLayoutContext(Navigator);
 export default function TabLayout() {
   const { isSignedIn } = useAuth();
   const colorScheme = useColorScheme();
+  const resolvedScheme = colorScheme ?? 'light';
+  const lightTabColor = '#000';
+  const lightTabInactiveColor = Colors.light.tabIconDefault;
+  const activeTintColor =
+    resolvedScheme === 'light' ? lightTabColor : Colors[resolvedScheme].tint;
+  const inactiveTintColor =
+    resolvedScheme === 'light'
+      ? lightTabInactiveColor
+      : Colors[resolvedScheme].tabIconDefault;
 
   if (!isSignedIn) {
     return <Redirect href="/sign-in" />;
@@ -23,13 +32,20 @@ export default function TabLayout() {
       tabBarPosition="bottom"
       screenOptions={{
         swipeEnabled: true,
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: activeTintColor,
+        tabBarInactiveTintColor: inactiveTintColor,
+        tabBarShowLabel: true,
         tabBarShowIcon: true,
         tabBarIndicatorStyle: {
           height: 0,
         },
         tabBarStyle: {
           height: 50,
+          backgroundColor:
+            resolvedScheme === 'dark' ? '#161719' : Colors.light.background,
+          borderTopWidth: 0,
+          elevation: 0,
+          shadowOpacity: 0,
         },
         tabBarLabelStyle: {
           fontSize: 12,
