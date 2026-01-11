@@ -1,43 +1,24 @@
-# Builder stage
-FROM node:20 AS builder
+FROM node:20-alpine
+
+RUN apk add --no-cache postgresql-client
+
 WORKDIR /app
 
-# install dependencies (use npm install to support repo without lockfile)
 COPY package*.json ./
-RUN npm install --no-audit --no-fund
+RUN npm install
 
-# copy everything and set DATABASE_URL for prisma generate
 COPY . .
-ARG DATABASE_URL
-ENV DATABASE_URL=${DATABASE_URL}
 
-# generate prisma client and build the project
-RUN npx prisma generate
 RUN npm run build
 
-# prune dev dependencies before copying to runner stage
-RUN npm prune --production
+EXPOSE 8080
 
-# Production stage
-FROM node:20-slim AS runner
-RUN useradd --system --user-group app
-WORKDIR /app
-
-# ensure home dir exists and is writable, set HOME and npm cache to writable location
-RUN mkdir -p /home/app && chown -R app:app /home/app /app
-ENV HOME=/home/app
-ENV NPM_CONFIG_CACHE=/tmp/.npm
-
-# copy only what's needed from builder
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-
-# make sure /app is owned by app user (node_modules/dist may be root-owned)
-RUN chown -R app:app /app /home/app
-
-ENV NODE_ENV=production
-EXPOSE 3000
-
-USER app
-CMD ["node", "dist/main"]
+CMD ["sh", "-c", "\
+  until PGPASSWORD=$DB_PASSWORD pg_isready -h \"$DB_HOST\" -p \"$DB_PORT\" -U \"$DB_USER\"; do \
+    echo 'Waiting for Postgres...'; \
+    sleep 2; \
+  done && \
+  npx prisma generate && \
+  npx prisma migrate deploy && \
+  npm run start:prod \
+"]
