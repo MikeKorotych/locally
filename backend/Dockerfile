@@ -1,19 +1,19 @@
-# Use official Node.js 20 image (Debian-based)
+# Use official Node.js 20 image
 FROM node:20
 
-# Install Postgres client (for pg_isready)
+# Install Postgres client
 RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
 
-# Copy package.json and lockfile first for caching
+# Copy package.json first for caching
 COPY package*.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy all source files
+# Copy source
 COPY . .
 
 # Build TypeScript
@@ -26,5 +26,5 @@ EXPOSE 8080
 CMD ["sh", "-c", "\
   npx prisma generate && \
   npx prisma migrate deploy && \
-  npm run start:prod \
+  node dist/src/main.js \
 "]
