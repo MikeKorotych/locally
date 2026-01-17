@@ -1,6 +1,6 @@
 # 🌍 Locally
 
-**Locally** is a Google Maps–based mobile application that combines:
+**Locally** is a map-first mobile application that combines:
 
 - a marketplace for goods
 - a services & freelance platform
@@ -35,7 +35,7 @@ It’s a **map of real people and their capabilities**.
 
 ### 🗺️ Map
 
-- Google Maps as the main screen
+- MapLibre + OpenFreeMap as the main map stack
 - User profile markers
 - Marker clustering by zoom level
 - Filters by category (goods / services / requests)
@@ -82,7 +82,8 @@ It’s a **map of real people and their capabilities**.
 - TypeScript
 - React Navigation
 - Zustand / Redux Toolkit
-- Google Maps SDK
+- MapLibre Native SDK
+- OpenFreeMap tiles/styles
 - Axios
 
 ### 🧠 Backend
@@ -99,6 +100,7 @@ It’s a **map of real people and their capabilities**.
 - Docker
 - AWS (RDS, S3, ECS)
 - Nginx (reverse proxy)
+- Migration in progress: Supabase (Postgres, Auth, Storage)
 
 ---
 
