@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
-import { StyleSheet, TextInput, View, Pressable } from 'react-native';
+import { StyleSheet, TextInput, View, Pressable, Text } from 'react-native';
 import {
   Camera,
   FillExtrusionLayer,
@@ -36,13 +36,10 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const cameraRef = useRef<CameraRef>(null);
   const animatedPlaceholder = useAnimatedPlaceholder();
+  const refLocation = useRef<Location.LocationObject>(null);
 
-  const handleCenterMap = async () => {
-    try {
-      console.log('centering map');
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      const location = await Location.getCurrentPositionAsync({});
-      cameraRef.current?.setCamera({
+  const zalypa = (location: Location.LocationObject) => {
+          cameraRef.current?.setCamera({
         centerCoordinate: [
           location.coords.longitude,
           location.coords.latitude,
@@ -52,9 +49,30 @@ export default function HomeScreen() {
         zoomLevel: 18,
         animationDuration: 1000,
       });
-    } catch (error) {
-      console.error('Error centering map:', error);
+  }
+
+  // ебучая функция для центрирования карты
+  const handleCenterMap = async () => {
+    if (refLocation.current) {
+      zalypa(refLocation.current);
     }
+
+    try {
+      console.log('centering map');
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      refLocation.current = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced, // Намного быстрее на Android
+      });
+      console.log('location', location);
+    } catch (error) {
+      console.log('error centering map', error);
+    }
+
+    // setTimeout(() => {
+    // if (refLocation.current) {
+    // zalypa(refLocation.current);
+    // }
+    // }, 10);
   };
 
   const loadLocation = async () => {
@@ -63,17 +81,19 @@ export default function HomeScreen() {
       return;
     }
 
-    const location = await Location.getCurrentPositionAsync({});
+    refLocation.current = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
     setRegion({
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
+      latitude: refLocation.current?.coords.latitude,
+      longitude: refLocation.current?.coords.longitude,
     });
 
     // FIX: setting the camera to the user's location
     cameraRef.current?.setCamera({
       centerCoordinate: [
-        location.coords.longitude,
-        location.coords.latitude,
+        refLocation.current?.coords.longitude,
+        refLocation.current?.coords.latitude,
       ],
       pitch: 60,
       heading: 0,
@@ -148,10 +168,13 @@ export default function HomeScreen() {
       {/* ебучая кнопка для центрирования карты */}
       {/* <Pressable
         style={[styles.locationButton, { bottom: insets.bottom + 16 }]}
-        onPress={() => handleCenterMap()}
+        onPress={handleCenterMap}
       >
         <IconSymbol name="location.fill" size={24} color={colors.textPrimary} />
       </Pressable> */}
+      <Pressable style={[styles.locationButton, { bottom: insets.bottom + 16 }]} onPress={() => {console.log('pressed'); handleCenterMap();}} >
+        <IconSymbol name="location.fill" size={24} color={colors.textPrimary} />
+      </Pressable>
     </View>
   );
 }
