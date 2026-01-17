@@ -3,3 +3,4 @@
 .yarn/unplugged
 node_modules
 dist
+.DS_Store
