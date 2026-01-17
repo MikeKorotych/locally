@@ -18,12 +18,12 @@ import { Svg, Path } from 'react-native-svg';
 
 export default function HomeScreen() {
   const [region, setRegion] = useState({
-    latitude: 37.78825,
-    longitude: -122.4324,
+    latitude: 49.5440,
+    longitude: 34.4949,
   });
   const initialCamera = useMemo(
     () => ({
-      centerCoordinate: [-122.4324, 37.78825] as [number, number],
+      centerCoordinate: [34.4949, 49.5440] as [number, number],
       zoomLevel: 18,
       pitch: 60,
     }),
