@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { StyleSheet, TextInput, View, Pressable } from 'react-native';
-import MapView, { Marker, Region } from 'react-native-maps';
+import MapLibreGL from '@maplibre/maplibre-react-native';
 import * as Location from 'expo-location';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,21 +10,20 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Svg, Path } from 'react-native-svg';
 
 export default function HomeScreen() {
-  const [region, setRegion] = useState<Region>({
+  const [region, setRegion] = useState({
     latitude: 37.78825,
     longitude: -122.4324,
-    latitudeDelta: 0.005,
-    longitudeDelta: 0.005,
   });
   const [searchQuery, setSearchQuery] = useState('');
   const theme = useColorScheme();
   const colors = ProfileColors[theme];
   const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
-  const mapRef = useRef<MapView>(null);
+  const cameraRef = useRef<MapLibreGL.Camera>(null);
   const [animatedPlaceholder, setAnimatedPlaceholder] = useState('');
 
   useEffect(() => {
+    MapLibreGL.setAccessToken(null);
     let isMounted = true;
     const words = ['neighbors', 'skills', 'items'];
     const prefix = 'Search for ';
@@ -90,19 +89,16 @@ export default function HomeScreen() {
     try {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       const location = await Location.getCurrentPositionAsync({});
-      mapRef.current?.animateCamera(
-        {
-          center: {
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-          },
-          pitch: 60,
-          heading: 0,
-          altitude: 1000,
-          zoom: 18,
-        },
-        { duration: 1000 }
-      );
+      cameraRef.current?.setCamera({
+        centerCoordinate: [
+          location.coords.longitude,
+          location.coords.latitude,
+        ],
+        pitch: 60,
+        heading: 0,
+        zoomLevel: 18,
+        animationDuration: 1000,
+      });
     } catch (error) {
       console.error('Error centering map:', error);
     }
@@ -125,19 +121,16 @@ export default function HomeScreen() {
       setRegion({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
-        latitudeDelta: 0.005,
-        longitudeDelta: 0.005,
       });
 
-      mapRef.current?.animateCamera({
-        center: {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        },
+      cameraRef.current?.setCamera({
+        centerCoordinate: [
+          location.coords.longitude,
+          location.coords.latitude,
+        ],
         pitch: 60,
         heading: 0,
-        altitude: 1000,
-        zoom: 18,
+        zoomLevel: 18,
       });
     };
 
@@ -150,26 +143,31 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <MapView
-        ref={mapRef}
+      <MapLibreGL.MapView
         style={styles.map}
-        provider="google"
-        initialCamera={{
-          center: {
-            latitude: region.latitude,
-            longitude: region.longitude,
-          },
-          pitch: 60,
-          heading: 0,
-          altitude: 1000,
-          zoom: 18,
-        }}
-        showsUserLocation
-        showsMyLocationButton={false}
-        pitchEnabled={true}
+        mapStyle="https://tiles.openfreemap.org/styles/liberty"
+        compassEnabled
+        pitchEnabled
       >
-        <Marker coordinate={region} title="You are here" />
-      </MapView>
+        <MapLibreGL.Camera
+          ref={cameraRef}
+          zoomLevel={18}
+          pitch={60}
+          centerCoordinate={[region.longitude, region.latitude]}
+        />
+        <MapLibreGL.UserLocation visible />
+        <MapLibreGL.FillExtrusionLayer
+          id="3d-buildings"
+          sourceID="openmaptiles"
+          sourceLayerID="building"
+          style={{
+            fillExtrusionColor: '#9aa5b1',
+            fillExtrusionHeight: ['get', 'render_height'],
+            fillExtrusionBase: ['get', 'render_min_height'],
+            fillExtrusionOpacity: 0.85,
+          }}
+        />
+      </MapLibreGL.MapView>
       <View style={[styles.searchWrap, { top: insets.top + 12 }]}>
         <View style={styles.searchField}>
           <IconSymbol
