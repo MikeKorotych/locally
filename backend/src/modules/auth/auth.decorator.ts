@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
-export const ClerkUserId = createParamDecorator(
-  (_: unknown, ctx: ExecutionContext): string => {
+export const AuthUser = createParamDecorator(
+  (data: string | undefined, ctx: ExecutionContext) => {
     const req = ctx.switchToHttp().getRequest();
-    return req.auth?.clerkUserId;
+    return data ? req.user[data] : req.user;
   },
 );
