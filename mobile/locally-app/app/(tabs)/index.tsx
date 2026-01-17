@@ -13,8 +13,8 @@ export default function HomeScreen() {
   const [region, setRegion] = useState<Region>({
     latitude: 37.78825,
     longitude: -122.4324,
-    latitudeDelta: 0.05,
-    longitudeDelta: 0.05,
+    latitudeDelta: 0.005,
+    longitudeDelta: 0.005,
   });
   const [searchQuery, setSearchQuery] = useState('');
   const theme = useColorScheme();
@@ -90,14 +90,18 @@ export default function HomeScreen() {
     try {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       const location = await Location.getCurrentPositionAsync({});
-      mapRef.current?.animateToRegion(
+      mapRef.current?.animateCamera(
         {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-          latitudeDelta: 0.012,
-          longitudeDelta: 0.012,
+          center: {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          },
+          pitch: 60,
+          heading: 0,
+          altitude: 1000,
+          zoom: 18,
         },
-        1000
+        { duration: 1000 }
       );
     } catch (error) {
       console.error('Error centering map:', error);
@@ -121,8 +125,19 @@ export default function HomeScreen() {
       setRegion({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
-        latitudeDelta: 0.02,
-        longitudeDelta: 0.02,
+        latitudeDelta: 0.005,
+        longitudeDelta: 0.005,
+      });
+
+      mapRef.current?.animateCamera({
+        center: {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        },
+        pitch: 60,
+        heading: 0,
+        altitude: 1000,
+        zoom: 18,
       });
     };
 
@@ -139,9 +154,19 @@ export default function HomeScreen() {
         ref={mapRef}
         style={styles.map}
         provider="google"
-        region={region}
+        initialCamera={{
+          center: {
+            latitude: region.latitude,
+            longitude: region.longitude,
+          },
+          pitch: 60,
+          heading: 0,
+          altitude: 1000,
+          zoom: 18,
+        }}
         showsUserLocation
         showsMyLocationButton={false}
+        pitchEnabled={true}
       >
         <Marker coordinate={region} title="You are here" />
       </MapView>

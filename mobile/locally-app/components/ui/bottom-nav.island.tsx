@@ -6,18 +6,22 @@ import {
   Pressable,
   PanResponder,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
   interpolate,
+  useAnimatedProps,
 } from 'react-native-reanimated';
 import { type MaterialTopTabBarProps } from '@react-navigation/material-top-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { IconSymbol, type IconSymbolName } from '@/components/ui/icon-symbol';
+import { type IconSymbolName } from '@/components/ui/icon-symbol';
 import { Svg, Path } from 'react-native-svg';
+
+const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 
 type FlipVariant = 'icon' | 'button';
 type InteractionMode = 'tap' | 'swipe';
@@ -49,6 +53,26 @@ export default function BottomNavBar(props: BottomNavBarProps) {
   const activeRoute = routes[activeIndex];
 
   const animatedRotation = useSharedValue(activeIndex * 180);
+
+  const animatedBlurProps = useAnimatedProps(() => {
+    const rotation = Math.abs(((animatedRotation.value % 360) + 360) % 360);
+    const intensity = interpolate(
+      rotation,
+      [0, 90, 180, 270, 360],
+      [0, 100, 0, 100, 0]
+    );
+    return { intensity };
+  });
+
+  const animatedBlurStyle = useAnimatedStyle(() => {
+    const rotation = Math.abs(((animatedRotation.value % 360) + 360) % 360);
+    const opacity = interpolate(
+      rotation,
+      [0, 90, 180, 270, 360],
+      [0, 1, 0, 1, 0]
+    );
+    return { opacity };
+  });
 
   const animatedStyle = useAnimatedStyle(() => {
     const scale = interpolate(
@@ -212,6 +236,12 @@ export default function BottomNavBar(props: BottomNavBarProps) {
                   <Animated.View style={[styles.backFace, backAnimatedStyle]}>
                     {backIcon}
                   </Animated.View>
+                  <AnimatedBlurView
+                    animatedProps={animatedBlurProps}
+                    style={[StyleSheet.absoluteFill, animatedBlurStyle]}
+                    tint={isLight ? 'light' : 'dark'}
+                    experimentalBlurMethod="none"
+                  />
                 </View>
               ) : (
                 frontIcon
@@ -260,6 +290,7 @@ const styles = StyleSheet.create({
     height: 28,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   iconFace: {
     position: 'absolute',
