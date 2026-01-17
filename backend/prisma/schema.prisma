@@ -7,30 +7,66 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum AuthProvider {
+  SUPABASE
+}
+
+enum AuthMethod {
+  EMAIL
+  GOOGLE
+  APPLE
+}
+
 model User {
-  id        String  @id @default(uuid())
-  clerkId   String  @unique @map("clerk_id")
-  email     String  @unique
+  id String @id @default(uuid())
+
+  email     String?
   firstName String? @map("first_name")
   lastName  String? @map("last_name")
+  imageUrl  String? @map("image_url")
 
-  location  Location? @relation(fields: [locationId], references: [id])
-  locationId String?  @unique @map("location_id")
+  identities AuthIdentity[]
+
+  location   Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  locationId String?   @unique @map("location_id")
 
   notifications Notification[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@index([email])
   @@map("users")
 }
 
+model AuthIdentity {
+  id String @id @default(uuid())
+
+  provider AuthProvider
+  method   AuthMethod
+
+  providerUserId String @map("provider_user_id")
+
+  email         String?
+  emailVerified Boolean @default(false)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+  @@map("auth_identities")
+}
+
 model Location {
-  id        String  @id @default(uuid())
+  id        String @id @default(uuid())
   latitude  Float
   longitude Float
 
-  user      User?
+  user User?
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -39,11 +75,12 @@ model Location {
 }
 
 model Notification {
-  id        String  @id @default(uuid())
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String  @map("user_id")
-  message   String
-  read      Boolean @default(false)
+  id     String @id @default(uuid())
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+
+  message String
+  read    Boolean @default(false)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
