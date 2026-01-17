@@ -1,10 +1,17 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { StyleSheet, TextInput, View, Pressable } from 'react-native';
-import MapLibreGL from '@maplibre/maplibre-react-native';
+import {
+  Camera,
+  FillExtrusionLayer,
+  MapView,
+  UserLocation,
+  type CameraRef,
+} from '@maplibre/maplibre-react-native';
 import * as Location from 'expo-location';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useAnimatedPlaceholder } from '@/hooks/use-animated-placeholder';
 import { ProfileColors } from '@/utils/colors';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Svg, Path } from 'react-native-svg';
@@ -14,79 +21,25 @@ export default function HomeScreen() {
     latitude: 37.78825,
     longitude: -122.4324,
   });
+  const initialCamera = useMemo(
+    () => ({
+      centerCoordinate: [-122.4324, 37.78825] as [number, number],
+      zoomLevel: 18,
+      pitch: 60,
+    }),
+    []
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const theme = useColorScheme();
   const colors = ProfileColors[theme];
   const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
-  const cameraRef = useRef<MapLibreGL.Camera>(null);
-  const [animatedPlaceholder, setAnimatedPlaceholder] = useState('');
-
-  useEffect(() => {
-    MapLibreGL.setAccessToken(null);
-    let isMounted = true;
-    const words = ['neighbors', 'skills', 'items'];
-    const prefix = 'Search for ';
-
-    const sleep = (ms: number) =>
-      new Promise((resolve) => setTimeout(resolve, ms));
-
-    const animate = async () => {
-      while (isMounted) {
-        // 1. Type "Search for "
-        let currentText = '';
-        for (let i = 0; i <= prefix.length; i++) {
-          if (!isMounted) return;
-          currentText = prefix.slice(0, i);
-          setAnimatedPlaceholder(currentText);
-          await sleep(60);
-        }
-
-        // 2. Cycle through words
-        for (let index = 0; index < words.length; index++) {
-          const word = words[index];
-
-          // Type the word
-          for (let i = 1; i <= word.length; i++) {
-            if (!isMounted) return;
-            setAnimatedPlaceholder(prefix + word.slice(0, i));
-            await sleep(60);
-          }
-
-          await sleep(1500); // Pause to read
-
-          // If not the last word, erase only the word
-          if (index < words.length - 1) {
-            for (let i = word.length - 1; i >= 0; i--) {
-              if (!isMounted) return;
-              setAnimatedPlaceholder(prefix + word.slice(0, i));
-              await sleep(30);
-            }
-            await sleep(150);
-          }
-        }
-
-        // 3. Erase everything after the last word
-        const fullText = prefix + words[words.length - 1];
-        for (let i = fullText.length - 1; i >= 0; i--) {
-          if (!isMounted) return;
-          setAnimatedPlaceholder(fullText.slice(0, i));
-          await sleep(30);
-        }
-
-        await sleep(400); // Small pause before restarting
-      }
-    };
-
-    void animate();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const cameraRef = useRef<CameraRef>(null);
+  const animatedPlaceholder = useAnimatedPlaceholder();
 
   const handleCenterMap = async () => {
     try {
+      console.log('centering map');
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       const location = await Location.getCurrentPositionAsync({});
       cameraRef.current?.setCamera({
@@ -104,59 +57,50 @@ export default function HomeScreen() {
     }
   };
 
+  const loadLocation = async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      return;
+    }
+
+    const location = await Location.getCurrentPositionAsync({});
+    setRegion({
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+    });
+
+    // FIX: setting the camera to the user's location
+    cameraRef.current?.setCamera({
+      centerCoordinate: [
+        location.coords.longitude,
+        location.coords.latitude,
+      ],
+      pitch: 60,
+      heading: 0,
+      zoomLevel: 18,
+    });
+  };
+
   useEffect(() => {
-    let isMounted = true;
-
-    const loadLocation = async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        return;
-      }
-
-      const location = await Location.getCurrentPositionAsync({});
-      if (!isMounted) {
-        return;
-      }
-
-      setRegion({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      });
-
-      cameraRef.current?.setCamera({
-        centerCoordinate: [
-          location.coords.longitude,
-          location.coords.latitude,
-        ],
-        pitch: 60,
-        heading: 0,
-        zoomLevel: 18,
-      });
-    };
-
     void loadLocation();
-
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
   return (
     <View style={styles.container}>
-      <MapLibreGL.MapView
+      <MapView
         style={styles.map}
         mapStyle="https://tiles.openfreemap.org/styles/liberty"
         compassEnabled
         pitchEnabled
       >
-        <MapLibreGL.Camera
+        <Camera
           ref={cameraRef}
-          zoomLevel={18}
-          pitch={60}
-          centerCoordinate={[region.longitude, region.latitude]}
+          defaultSettings={initialCamera}
+          followUserLocation={false}
+          followUserMode={undefined}
         />
-        <MapLibreGL.UserLocation visible />
-        <MapLibreGL.FillExtrusionLayer
+        <UserLocation visible />
+        <FillExtrusionLayer
           id="3d-buildings"
           sourceID="openmaptiles"
           sourceLayerID="building"
@@ -167,7 +111,7 @@ export default function HomeScreen() {
             fillExtrusionOpacity: 0.85,
           }}
         />
-      </MapLibreGL.MapView>
+      </MapView>
       <View style={[styles.searchWrap, { top: insets.top + 12 }]}>
         <View style={styles.searchField}>
           <IconSymbol
@@ -201,12 +145,13 @@ export default function HomeScreen() {
           </Svg>
         </View>
       </View>
-      <Pressable
+      {/* ебучая кнопка для центрирования карты */}
+      {/* <Pressable
         style={[styles.locationButton, { bottom: insets.bottom + 16 }]}
-        onPress={handleCenterMap}
+        onPress={() => handleCenterMap()}
       >
         <IconSymbol name="location.fill" size={24} color={colors.textPrimary} />
-      </Pressable>
+      </Pressable> */}
     </View>
   );
 }
