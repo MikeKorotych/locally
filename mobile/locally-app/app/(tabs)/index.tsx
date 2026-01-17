@@ -61,7 +61,7 @@ export default function HomeScreen() {
       console.log('centering map');
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       refLocation.current = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced, // Намного быстрее на Android
+        accuracy: Location.Accuracy.Balanced,
       });
       console.log('location', location);
     } catch (error) {
@@ -166,13 +166,7 @@ export default function HomeScreen() {
         </View>
       </View>
       {/* ебучая кнопка для центрирования карты */}
-      {/* <Pressable
-        style={[styles.locationButton, { bottom: insets.bottom + 16 }]}
-        onPress={handleCenterMap}
-      >
-        <IconSymbol name="location.fill" size={24} color={colors.textPrimary} />
-      </Pressable> */}
-      <Pressable style={[styles.locationButton, { bottom: insets.bottom + 16 }]} onPress={() => {console.log('pressed'); handleCenterMap();}} >
+      <Pressable style={[styles.locationButton, { bottom: insets.bottom + 16 }]} onPress={handleCenterMap} >
         <IconSymbol name="location.fill" size={24} color={colors.textPrimary} />
       </Pressable>
     </View>
