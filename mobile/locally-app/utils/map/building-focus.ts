@@ -1,10 +1,15 @@
 import { useCallback, useState } from 'react';
-import type { Feature } from 'geojson';
-import { getPolygonCenter } from '@/utils/map/geometry';
+import type { Feature, Polygon } from 'geojson';
+import { getPolygonCenter, getDistance } from '@/utils/map/geometry';
 
 type MapRef = {
   queryRenderedFeaturesAtPoint?: (
     point: any,
+    filter?: any,
+    layerIDs?: string[]
+  ) => Promise<any>;
+  queryRenderedFeaturesInRect?: (
+    rect: any,
     filter?: any,
     layerIDs?: string[]
   ) => Promise<any>;
@@ -28,8 +33,9 @@ const isBuildingFeature = (feature: Feature) => {
   const layerId =
     (feature as any).layer?.id ??
     (feature as any).sourceLayerID ??
-    (feature as any).sourceLayer;
-  if (typeof layerId === 'string' && layerId.includes('building')) {
+    (feature as any).sourceLayer ??
+    feature.properties?.layer;
+  if (typeof layerId === 'string' && (layerId.includes('building') || layerId.includes('extrusion'))) {
     return true;
   }
   const props = feature.properties as any;
@@ -68,6 +74,7 @@ export const useBuildingFocus = ({
     async (event: any) => {
       const map = mapRef.current;
       const eventFeatures = (event?.features ?? []) as Feature[];
+      const tapLngLat = event?.geometry?.coordinates as [number, number];
       const screenPoint =
         (Array.isArray(event?.point) ? event.point : undefined) ??
         (event?.point?.x !== undefined && event?.point?.y !== undefined
@@ -77,98 +84,73 @@ export const useBuildingFocus = ({
         event?.properties?.screenPointY !== undefined
           ? [event.properties.screenPointX, event.properties.screenPointY]
           : undefined);
+
       let features: Feature[] = [];
-      onDebug?.('tap: raw event', {
-        hasEventFeatures: eventFeatures.length > 0,
-        screenPoint,
-        layerIds: layerIds ?? [],
-      });
-      const queryAtPoint = async (
-        point: [number, number],
-        attempt: number
-      ) => {
-        if (!map?.queryRenderedFeaturesAtPoint) {
-          return [] as Feature[];
-        }
-        const result = await map.queryRenderedFeaturesAtPoint(
-          point,
-          undefined,
-          layerIds
-        );
-        const list = result?.features ?? result?.features?.features ?? [];
-        onDebug?.('tap: query at point', {
-          attempt,
-          count: list.length,
-          point,
-        });
-        return list as Feature[];
+      
+      const queryInRect = async (point: [number, number]) => {
+        if (!map?.queryRenderedFeaturesInRect) return [];
+        // Создаем квадрат 30x30 пикселей вокруг точки тапа
+        const size = 15;
+        const rect = [point[1] + size, point[0] + size, point[1] - size, point[0] - size];
+        const result = await map.queryRenderedFeaturesInRect(rect, undefined, layerIds);
+        return (result?.features ?? result?.features?.features ?? []) as Feature[];
       };
+
       if (eventFeatures.length) {
         features = eventFeatures;
-        onDebug?.('tap: using event features', {
-          count: features.length,
-          firstLayerId: (features[0] as any)?.layer?.id,
-        });
-      } else if (map?.queryRenderedFeaturesAtPoint && screenPoint) {
-        features = await queryAtPoint(screenPoint, 0);
-        onDebug?.('tap: using queryRenderedFeaturesAtPoint', {
-          count: features.length,
-          firstLayerId: (features[0] as any)?.layer?.id,
-        });
-      } else {
-        onDebug?.('tap: no features source', {
-          hasMap: Boolean(map),
-          hasQueryAtPoint: Boolean(map?.queryRenderedFeaturesAtPoint),
-          hasScreenPoint: Boolean(screenPoint),
-        });
+      } else if (screenPoint) {
+        features = await queryInRect(screenPoint);
       }
-      if (!features.length && screenPoint) {
-        const offsets = [-10, 0, 10];
-        const samples: Feature[] = [];
-        let attempt = 1;
-        for (const dx of offsets) {
-          for (const dy of offsets) {
-            if (dx === 0 && dy === 0) {
-              continue;
-            }
-            const list = await queryAtPoint(
-              [screenPoint[0] + dx, screenPoint[1] + dy],
-              attempt
-            );
-            attempt += 1;
-            if (list.length) {
-              samples.push(...list);
+
+      let building = features.find(isBuildingFeature) ?? null;
+
+      // КЛЮЧЕВОЙ МОМЕНТ: Если это MultiPolygon (целый район), выбираем только ближайший кусочек
+      if (building && building.geometry.type === 'MultiPolygon' && tapLngLat) {
+        onDebug?.('tap: exploding MultiPolygon', { parts: (building.geometry as any).coordinates.length });
+        
+        const parts = (building.geometry as any).coordinates;
+        let bestPart = parts[0];
+        let minDistance = Infinity;
+
+        for (const part of parts) {
+          const center = getPolygonCenter(part);
+          if (center) {
+            const dist = getDistance(center, tapLngLat);
+            if (dist < minDistance) {
+              minDistance = dist;
+              bestPart = part;
             }
           }
         }
-        if (samples.length) {
-          features = samples;
-          onDebug?.('tap: using offset samples', {
-            count: features.length,
-          });
-        }
+
+        // Превращаем MultiPolygon в обычный Polygon из одной части
+        building = {
+          ...building,
+          geometry: {
+            type: 'Polygon',
+            coordinates: bestPart
+          } as Polygon
+        };
       }
-      const building = features.find(isBuildingFeature) ?? null;
-      onDebug?.('tap: building selection', {
-        found: Boolean(building),
-        firstFeatureLayerId: (features[0] as any)?.layer?.id,
-        firstFeatureProps: (features[0] as any)?.properties,
-      });
+      
+      if (building) {
+        console.log('--- SELECTED BUILDING DATA (FIXED) ---');
+        console.log('ID:', building.id);
+        console.log('Geometry Type:', building.geometry.type);
+        console.log('------------------------------');
+      }
+
       setSelectedFeature(building);
-      if (!building) {
-        return;
-      }
+      if (!building) return;
+
       const center = getFeatureCenter(building);
       if (center) {
         onFocus(center);
-        return;
-      }
-      const tapCoord = event?.geometry?.coordinates;
-      if (Array.isArray(tapCoord) && tapCoord.length >= 2) {
-        onFocus([tapCoord[0], tapCoord[1]]);
+      } else if (tapLngLat) {
+        onFocus(tapLngLat);
       }
     },
-    [layerIds, mapRef, onFocus]
+    [layerIds, mapRef, onFocus, onDebug]
   );
 
   return { selectedFeature, onMapPress: handlePress };

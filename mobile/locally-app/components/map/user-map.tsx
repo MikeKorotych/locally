@@ -150,33 +150,44 @@ export const UserMap = ({ colors, insets }: UserMapProps) => {
         interactiveLayerIds={activeBuildingLayerIds}
         onPress={onMapPress}
         onCameraChanged={onCameraChanged}
-        onDidFinishLoadingStyle={() => {
+        onDidFinishLoadingStyle={async () => {
           styleLoadedRef.current = true;
           mapLogger.debug('map style loaded');
-          const style = (mapRef.current as any)?.getStyle?.();
-          const layers = style?.layers ?? [];
-          const buildingLayers = layers
-            .filter((layer: any) => {
-              const id = String(layer?.id ?? '');
-              const type = String(layer?.type ?? '');
-              return id.includes('building') || type.includes('fill-extrusion');
-            })
-            .map((layer: any) => String(layer.id))
-            .filter(Boolean);
-          mapLogger.debug('style layers info', {
-            count: layers.length,
-          });
-          if (buildingLayers.length) {
-            setBuildingLayerIds(buildingLayers);
-            mapLogger.debug('building layers detected', {
-              count: buildingLayers.length,
-              ids: buildingLayers,
-            });
-          } else {
-            mapLogger.debug('no building layers detected', {
-              fallback: fallbackBuildingLayerIds,
-            });
-          }
+          
+          // Пробуем получить слои с небольшой задержкой, так как натив не всегда готов сразу
+          setTimeout(async () => {
+            try {
+              const style = await (mapRef.current as any)?.getStyle?.();
+              const layers = style?.layers ?? [];
+              
+              if (layers.length > 0) {
+                console.log('--- ALL MAP LAYERS START ---');
+                console.log(layers.map((l: any) => `${l.id} (${l.type})`).join('\n'));
+                console.log('--- ALL MAP LAYERS END ---');
+
+                const buildingLayers = layers
+                  .filter((layer: any) => {
+                    const id = String(layer?.id ?? '');
+                    const type = String(layer?.type ?? '');
+                    return id.includes('building') || type.includes('fill-extrusion');
+                  })
+                  .map((layer: any) => String(layer.id))
+                  .filter(Boolean);
+
+                if (buildingLayers.length) {
+                  setBuildingLayerIds(buildingLayers);
+                  mapLogger.debug('building layers detected', {
+                    count: buildingLayers.length,
+                    ids: buildingLayers,
+                  });
+                }
+              } else {
+                mapLogger.debug('style layers still empty after delay');
+              }
+            } catch (err) {
+              mapLogger.debug('error getting style layers', { error: String(err) });
+            }
+          }, 500);
         }}
       >
         <Camera

@@ -35,6 +35,10 @@ export const getRingCenter = (ring: Ring): LngLat | null => {
   return [(minLng + maxLng) / 2, (minLat + maxLat) / 2];
 };
 
+export const getDistance = (p1: LngLat, p2: LngLat): number => {
+  return Math.sqrt(Math.pow(p1[0] - p2[0], 2) + Math.pow(p1[1] - p2[1], 2));
+};
+
 export const getPolygonCenter = (rings: Ring[]): LngLat | null => {
   if (!rings.length) {
     return null;
