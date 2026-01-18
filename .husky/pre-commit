@@ -2,4 +2,10 @@
 # Fix for Yarn Berry + Husky
 unset GIT_INDEX_FILE
 cd "$(dirname "$0")/.."
+# Run backend tests and abort commit if they fail
+echo "Running backend tests..."
+corepack yarn --cwd backend test --silent || {
+  echo "Backend tests failed — aborting commit."
+  exit 1
+}
 corepack yarn workspace backend lint-staged
