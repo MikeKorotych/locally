@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import Mapbox, {
   Camera,
+  FillExtrusionLayer,
   MapView,
+  ShapeSource,
   UserLocation,
   type Location as MapboxLocation,
 } from '@rnmapbox/maps';
@@ -14,6 +16,7 @@ import { useMapCamera } from '@/utils/map/camera';
 import { useCurrentAddress } from '@/utils/map/current-address';
 import { useUserLocation } from '@/utils/map/location';
 import { useMapLogger } from '@/utils/map/logger';
+import { useBuildingFocus } from '@/utils/map/building-focus';
 
 const ZOOM_LEVEL = 18;
 const PITCH_ANGLE = 60;
@@ -35,16 +38,33 @@ export const UserMap = ({ colors, insets }: UserMapProps) => {
   const { address, addressDetails, resolveAddress } = useCurrentAddress();
   const mapLogger = useMapLogger('UserMap');
   const lastLoggedAddressRef = useRef<string | null>(null);
+  const mapRef = useRef<MapView>(null);
+  const [buildingLayerIds, setBuildingLayerIds] = useState<string[]>([]);
+  const fallbackBuildingLayerIds = useMemo(
+    () => ['building', 'building-3d', '3d-buildings', 'building-extrusion'],
+    []
+  );
   const {
     cameraRef,
     cameraSettings,
     initialCamera,
     setCameraToLocation,
     onCameraChanged,
+    setCameraToCoordinate,
   } = useMapCamera({
     initialCenter: [34.4949, 49.5440],
     initialZoom: ZOOM_LEVEL,
     pitch: PITCH_ANGLE,
+  });
+  const activeBuildingLayerIds =
+    buildingLayerIds.length > 0
+      ? buildingLayerIds
+      : fallbackBuildingLayerIds;
+  const { selectedFeature, onMapPress } = useBuildingFocus({
+    mapRef,
+    onFocus: (center) => setCameraToCoordinate(center, 800, ZOOM_LEVEL),
+    layerIds: activeBuildingLayerIds,
+    onDebug: (message, payload) => mapLogger.debug(message, payload),
   });
 
   useEffect(() => {
@@ -116,6 +136,7 @@ export const UserMap = ({ colors, insets }: UserMapProps) => {
   return (
     <>
       <MapView
+        ref={mapRef}
         style={styles.map}
         styleURL="https://tiles.openfreemap.org/styles/liberty"
         compassEnabled
@@ -125,10 +146,37 @@ export const UserMap = ({ colors, insets }: UserMapProps) => {
           y: insets.bottom + 16 + 48 + 12,
         }}
         pitchEnabled
+        // @ts-expect-error: interactiveLayerIds supported by Mapbox SDK but missing in types
+        interactiveLayerIds={activeBuildingLayerIds}
+        onPress={onMapPress}
         onCameraChanged={onCameraChanged}
         onDidFinishLoadingStyle={() => {
           styleLoadedRef.current = true;
           mapLogger.debug('map style loaded');
+          const style = (mapRef.current as any)?.getStyle?.();
+          const layers = style?.layers ?? [];
+          const buildingLayers = layers
+            .filter((layer: any) => {
+              const id = String(layer?.id ?? '');
+              const type = String(layer?.type ?? '');
+              return id.includes('building') || type.includes('fill-extrusion');
+            })
+            .map((layer: any) => String(layer.id))
+            .filter(Boolean);
+          mapLogger.debug('style layers info', {
+            count: layers.length,
+          });
+          if (buildingLayers.length) {
+            setBuildingLayerIds(buildingLayers);
+            mapLogger.debug('building layers detected', {
+              count: buildingLayers.length,
+              ids: buildingLayers,
+            });
+          } else {
+            mapLogger.debug('no building layers detected', {
+              fallback: fallbackBuildingLayerIds,
+            });
+          }
         }}
       >
         <Camera
@@ -144,6 +192,21 @@ export const UserMap = ({ colors, insets }: UserMapProps) => {
           followUserMode={undefined}
         />
         <UserLocation visible onUpdate={handleUserLocationUpdate} />
+        {selectedFeature ? (
+          <ShapeSource id="focused-building" shape={selectedFeature}>
+            <FillExtrusionLayer
+              id="focused-building-fill"
+              minZoomLevel={0}
+              maxZoomLevel={24}
+              style={{
+                fillExtrusionColor: '#2b7cff',
+                fillExtrusionHeight: ['get', 'render_height'],
+                fillExtrusionBase: ['get', 'render_min_height'],
+                fillExtrusionOpacity: 0.6,
+              }}
+            />
+          </ShapeSource>
+        ) : null}
       </MapView>
       <Pressable
         style={[styles.locationButton, { bottom: insets.bottom + 16 }]}

@@ -22,13 +22,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
+      
+      if (session?.access_token) {
+        console.log('Supabase JWT (app load):', session.access_token);
+      }
     });
 
-    // Listen for auth state changes
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+    // Listen for auth state changes (login, logout, token refresh)
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
+
+      if (session?.access_token) {
+        console.log(`Supabase JWT (${event}):`, session.access_token);
+      } else if (event === 'SIGNED_OUT') {
+        console.log('Supabase User SIGNED_OUT');
+      }
     });
 
     return () => {
