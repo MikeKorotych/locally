@@ -9,11 +9,11 @@ export class AuthService {
   private hs256Secret?: string;
 
   constructor(private readonly config: ConfigService) {
-    const supabaseUrl = this.config.get<string>('DATABASE_URL');
+    const supabaseUrl = this.config.get<string>('SUPABASE_URL');
     console.log(supabaseUrl);
     if (!supabaseUrl) {
       throw new Error(
-        'DATABASE_URL is not defined — set DATABASE_URL in your environment (.env or container env).',
+        'SUPABASE_URL is not defined — set SUPABASE_URL in your environment (.env or container env).',
       );
     }
     this.jwks = createRemoteJWKSet(
@@ -33,7 +33,7 @@ export class AuthService {
 
     try {
       const supabaseUrl = this.config
-        .get<string>('DATABASE_URL')
+        .get<string>('SUPABASE_URL')
         ?.replace(/\/+$/g, '');
       const issuer = supabaseUrl?.endsWith('/auth/v1')
         ? supabaseUrl
