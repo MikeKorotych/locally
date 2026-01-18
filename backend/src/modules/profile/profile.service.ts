@@ -33,6 +33,7 @@ export class ProfileService {
         const method = user.amr[0]?.method;
         await prisma.authIdentity.create({
           data: {
+            email: user.email || null,
             provider: 'SUPABASE',
             providerUserId: user.sub,
             userId: createdUser.id,
