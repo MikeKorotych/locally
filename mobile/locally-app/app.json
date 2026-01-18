@@ -58,7 +58,12 @@
         }
       ],
       "@react-native-community/datetimepicker",
-      "@maplibre/maplibre-react-native"
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsImpl": "mapbox"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

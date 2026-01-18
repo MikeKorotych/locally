@@ -17,15 +17,15 @@ export default function TabLayout() {
   return (
     <MaterialTabs
       tabBarPosition="bottom"
-      screenOptions={{
-        swipeEnabled: true,
+      screenOptions={({ route }) => ({
+        swipeEnabled: route.name !== 'index',
         // headerShown: false,
-      }}
+      })}
       tabBar={(props) => (
         <BottomNavBar
           {...props}
           flipVariant="icon"
-          interactionMode="swipe"
+          interactionMode="tap"
           primaryIconName="person.fill"
           secondaryIconName="magnifyingglass"
         />
