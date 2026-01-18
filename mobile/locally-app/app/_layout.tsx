@@ -9,12 +9,11 @@ import 'react-native-reanimated';
 import { Platform, StyleSheet } from 'react-native';
 import * as NavigationBar from 'expo-navigation-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { ClerkProvider } from '@clerk/clerk-expo';
-import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import { useEffect } from 'react';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors } from '@/constants/theme';
+import { AuthProvider } from '@/context/auth-context';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -22,11 +21,6 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
-
-  if (!publishableKey) {
-    throw new Error('Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY');
-  }
 
   useEffect(() => {
     if (Platform.OS !== 'android') {
@@ -41,7 +35,7 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={styles.root}>
-      <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+      <AuthProvider>
         <ThemeProvider
           value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
         >
@@ -59,7 +53,7 @@ export default function RootLayout() {
           </Stack>
           <StatusBar style="auto" />
         </ThemeProvider>
-      </ClerkProvider>
+      </AuthProvider>
     </GestureHandlerRootView>
   );
 }

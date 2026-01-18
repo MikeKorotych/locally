@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -13,18 +13,16 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useSignUp } from '@clerk/clerk-expo';
+import { supabase } from '@/lib/supabase';
 import { AuthColors } from '../../utils/colors';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function SignUpScreen() {
-  const { signUp, setActive, isLoaded } = useSignUp();
+  const router = useRouter();
   const theme = useColorScheme();
   const colors = AuthColors[theme];
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [code, setCode] = useState('');
-  const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -33,51 +31,29 @@ export default function SignUpScreen() {
     [email, password, submitting]
   );
 
-  const canVerify = useMemo(
-    () => Boolean(code.trim()) && !submitting,
-    [code, submitting]
-  );
-
   const onSignUp = async () => {
-    if (!isLoaded || !canSubmit) {
+    if (!canSubmit) {
       return;
     }
 
     try {
       setSubmitting(true);
       setError(null);
-      await signUp.create({ emailAddress: email.trim(), password });
-      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
-      setVerifying(true);
-    } catch (err: any) {
-      const message = err?.errors?.[0]?.message || 'Sign-up failed. Try again.';
-      setError(message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const onVerify = async () => {
-    if (!isLoaded || !canVerify) {
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-      setError(null);
-      const result = await signUp.attemptEmailAddressVerification({
-        code: code.trim(),
+      
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
       });
 
-      if (result.status === 'complete') {
-        await setActive({ session: result.createdSessionId });
+      if (signUpError) throw signUpError;
+
+      if (data.session) {
+        router.replace('/(tabs)');
       } else {
-        setError('Verification requires additional steps.');
+        setError('Please check your email for verification link.');
       }
     } catch (err: any) {
-      const message =
-        err?.errors?.[0]?.message || 'Verification failed. Try again.';
-      setError(message);
+      setError(err.message || 'Sign-up failed. Try again.');
     } finally {
       setSubmitting(false);
     }
@@ -113,131 +89,77 @@ export default function SignUpScreen() {
               </View>
 
               <View style={styles.form}>
-                {!verifying ? (
-                  <>
-                    <View>
-                      <Text style={[styles.label, { color: colors.textMuted }]}>
-                        Email
-                      </Text>
-                      <TextInput
-                        autoCapitalize="none"
-                        autoComplete="email"
-                        keyboardType="email-address"
-                        placeholder="you@example.com"
-                        placeholderTextColor={colors.placeholder}
-                        style={[
-                          styles.input,
-                          {
-                            borderColor: colors.border,
-                            backgroundColor: colors.inputBackground,
-                            color: colors.textPrimary,
-                          },
-                        ]}
-                        value={email}
-                        onChangeText={setEmail}
-                      />
-                    </View>
+                <View>
+                  <Text style={[styles.label, { color: colors.textMuted }]}>
+                    Email
+                  </Text>
+                  <TextInput
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    keyboardType="email-address"
+                    placeholder="you@example.com"
+                    placeholderTextColor={colors.placeholder}
+                    style={[
+                      styles.input,
+                      {
+                        borderColor: colors.border,
+                        backgroundColor: colors.inputBackground,
+                        color: colors.textPrimary,
+                      },
+                    ]}
+                    value={email}
+                    onChangeText={setEmail}
+                  />
+                </View>
 
-                    <View>
-                      <Text style={[styles.label, { color: colors.textMuted }]}>
-                        Password
-                      </Text>
-                      <TextInput
-                        autoCapitalize="none"
-                        autoComplete="password"
-                        placeholder="••••••••"
-                        placeholderTextColor={colors.placeholder}
-                        secureTextEntry
-                        style={[
-                          styles.input,
-                          {
-                            borderColor: colors.border,
-                            backgroundColor: colors.inputBackground,
-                            color: colors.textPrimary,
-                          },
-                        ]}
-                        value={password}
-                        onChangeText={setPassword}
-                      />
-                    </View>
+                <View>
+                  <Text style={[styles.label, { color: colors.textMuted }]}>
+                    Password
+                  </Text>
+                  <TextInput
+                    autoCapitalize="none"
+                    autoComplete="password"
+                    placeholder="••••••••"
+                    placeholderTextColor={colors.placeholder}
+                    secureTextEntry
+                    style={[
+                      styles.input,
+                      {
+                        borderColor: colors.border,
+                        backgroundColor: colors.inputBackground,
+                        color: colors.textPrimary,
+                      },
+                    ]}
+                    value={password}
+                    onChangeText={setPassword}
+                  />
+                </View>
 
-                    {error ? (
-                      <Text style={[styles.error, { color: colors.error }]}>
-                        {error}
-                      </Text>
-                    ) : null}
+                {error ? (
+                  <Text style={[styles.error, { color: colors.error }]}>
+                    {error}
+                  </Text>
+                ) : null}
 
-                    <TouchableOpacity
-                      style={[
-                        styles.button,
-                        { backgroundColor: colors.buttonBackground },
-                        !canSubmit && styles.buttonDisabled,
-                      ]}
-                      onPress={onSignUp}
-                      disabled={!canSubmit}
-                      activeOpacity={0.85}
-                    >
-                      <Text
-                        style={[
-                          styles.buttonText,
-                          { color: colors.buttonText },
-                        ]}
-                      >
-                        {submitting ? 'Creating...' : 'Create account'}
-                      </Text>
-                    </TouchableOpacity>
-                  </>
-                ) : (
-                  <>
-                    <View>
-                      <Text style={[styles.label, { color: colors.textMuted }]}>
-                        Verification code
-                      </Text>
-                      <TextInput
-                        autoCapitalize="none"
-                        keyboardType="number-pad"
-                        placeholder="Enter code"
-                        placeholderTextColor={colors.placeholder}
-                        style={[
-                          styles.input,
-                          {
-                            borderColor: colors.border,
-                            backgroundColor: colors.inputBackground,
-                            color: colors.textPrimary,
-                          },
-                        ]}
-                        value={code}
-                        onChangeText={setCode}
-                      />
-                    </View>
-
-                    {error ? (
-                      <Text style={[styles.error, { color: colors.error }]}>
-                        {error}
-                      </Text>
-                    ) : null}
-
-                    <TouchableOpacity
-                      style={[
-                        styles.button,
-                        { backgroundColor: colors.buttonBackground },
-                        !canVerify && styles.buttonDisabled,
-                      ]}
-                      onPress={onVerify}
-                      disabled={!canVerify}
-                      activeOpacity={0.85}
-                    >
-                      <Text
-                        style={[
-                          styles.buttonText,
-                          { color: colors.buttonText },
-                        ]}
-                      >
-                        {submitting ? 'Verifying...' : 'Verify email'}
-                      </Text>
-                    </TouchableOpacity>
-                  </>
-                )}
+                <TouchableOpacity
+                  style={[
+                    styles.button,
+                    { backgroundColor: colors.buttonBackground },
+                    !canSubmit && styles.buttonDisabled,
+                  ]}
+                  onPress={onSignUp}
+                  disabled={!canSubmit}
+                  activeOpacity={0.85}
+                >
+                  <Text
+                    style={[
+                      styles.buttonText,
+                      { color: colors.buttonText },
+                    ]}
+                  >
+                    {submitting ? 'Creating...' : 'Create account'}
+                  </Text>
+                </TouchableOpacity>
 
                 <View style={styles.footer}>
                   <Text

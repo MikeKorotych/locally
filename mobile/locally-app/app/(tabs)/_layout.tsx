@@ -1,5 +1,5 @@
 import { Redirect, withLayoutContext } from 'expo-router';
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth } from '@/context/auth-context';
 import React from 'react';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import BottomNavBar from '../../components/ui/bottom-nav.island';
@@ -8,9 +8,13 @@ const { Navigator } = createMaterialTopTabNavigator();
 const MaterialTabs = withLayoutContext(Navigator);
 
 export default function TabLayout() {
-  const { isSignedIn } = useAuth();
+  const { user, isLoading } = useAuth();
 
-  if (!isSignedIn) {
+  if (isLoading) {
+    return null; // Or a loading spinner
+  }
+
+  if (!user) {
     return <Redirect href="/sign-in" />;
   }
 

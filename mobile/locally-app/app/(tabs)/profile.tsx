@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   Image,
   ImageBackground,
@@ -11,10 +11,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { useAuth } from '@/context/auth-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useThemePreference } from '@/hooks/use-theme-preference';
 import { ProfileColors } from '@/utils/colors';
+import api from '@/lib/api';
 
 const avatar =
   'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=facearea&w=200&h=200&q=80';
@@ -81,16 +82,30 @@ const services = [
 ];
 
 export default function ProfileScreen() {
-  const { signOut } = useAuth();
-  const { user } = useUser();
+  const { signOut, user } = useAuth();
   const router = useRouter();
   const theme = useColorScheme();
   const toggleTheme = useThemePreference((state) => state.toggleTheme);
   const colors = ProfileColors[theme];
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const [backendProfile, setBackendProfile] = useState<any>(null);
 
-  const email = user?.primaryEmailAddress?.emailAddress;
-  const name = user?.fullName || user?.firstName || 'User';
+  useEffect(() => {
+    const fetchBackendProfile = async () => {
+      try {
+        const response = await api.get('/profile'); // Adjust endpoint as needed
+        setBackendProfile(response.data);
+      } catch (error) {
+        console.log('ProfileScreen: backend fetch failed', error);
+      }
+    };
+    if (user) {
+      fetchBackendProfile();
+    }
+  }, [user]);
+
+  const email = user?.email;
+  const name = user?.user_metadata?.full_name || user?.user_metadata?.first_name || 'User';
 
   return (
     <SafeAreaView style={styles.safeArea}>

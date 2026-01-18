@@ -119,6 +119,11 @@ export const UserMap = ({ colors, insets }: UserMapProps) => {
         style={styles.map}
         styleURL="https://tiles.openfreemap.org/styles/liberty"
         compassEnabled
+        compassViewPosition={3}
+        compassViewMargins={{
+          x: 16,
+          y: insets.bottom + 16 + 48 + 12,
+        }}
         pitchEnabled
         onCameraChanged={onCameraChanged}
         onDidFinishLoadingStyle={() => {
@@ -163,9 +168,9 @@ const createStyles = (
     },
     locationButton: {
       position: 'absolute',
-      right: 16,
-      width: 48,
-      height: 48,
+      right: 18,
+      width: 44,
+      height: 44,
       borderRadius: 24,
       backgroundColor: colors.surface,
       borderColor: colors.border,
