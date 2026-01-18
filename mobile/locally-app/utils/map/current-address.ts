@@ -14,10 +14,16 @@ type UseCurrentAddressResult = {
   resolveAddress: (coords: Coordinates) => Promise<void>;
 };
 
+type AddressState = {
+  address: string;
+  addressDetails: Location.LocationGeocodedAddress | null;
+};
+
 export const useCurrentAddress = (): UseCurrentAddressResult => {
-  const [address, setAddress] = useState('');
-  const [addressDetails, setAddressDetails] =
-    useState<Location.LocationGeocodedAddress | null>(null);
+  const [addressState, setAddressState] = useState<AddressState>({
+    address: '',
+    addressDetails: null,
+  });
   const [isResolving, setIsResolving] = useState(false);
 
   const resolveAddress = useCallback(async (coords: Coordinates) => {
@@ -27,12 +33,19 @@ export const useCurrentAddress = (): UseCurrentAddressResult => {
         latitude: coords.latitude,
         longitude: coords.longitude,
       });
-      setAddress(formatAddress(addr));
-      setAddressDetails(addr);
+      setAddressState({
+        address: formatAddress(addr),
+        addressDetails: addr,
+      });
     } finally {
       setIsResolving(false);
     }
   }, []);
 
-  return { address, addressDetails, isResolving, resolveAddress };
+  return {
+    address: addressState.address,
+    addressDetails: addressState.addressDetails,
+    isResolving,
+    resolveAddress,
+  };
 };

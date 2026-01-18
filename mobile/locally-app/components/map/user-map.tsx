@@ -34,12 +34,13 @@ export const UserMap = ({ colors, insets }: UserMapProps) => {
   const { locationRef, requestAndLoadLocation } = useUserLocation();
   const { address, addressDetails, resolveAddress } = useCurrentAddress();
   const mapLogger = useMapLogger('UserMap');
+  const lastLoggedAddressRef = useRef<string | null>(null);
   const {
     cameraRef,
     cameraSettings,
     initialCamera,
     setCameraToLocation,
-    onRegionIsChanging,
+    onCameraChanged,
   } = useMapCamera({
     initialCenter: [34.4949, 49.5440],
     initialZoom: ZOOM_LEVEL,
@@ -103,10 +104,13 @@ export const UserMap = ({ colors, insets }: UserMapProps) => {
     if (!address && !addressDetails) {
       return;
     }
-    mapLogger.debug('current address', {
-      address,
-      addressDetails,
-    });
+    if (address && address !== lastLoggedAddressRef.current) {
+      lastLoggedAddressRef.current = address;
+      mapLogger.debug('current address', {
+        address,
+        addressDetails,
+      });
+    }
   }, [address, addressDetails, mapLogger]);
 
   return (
@@ -116,7 +120,7 @@ export const UserMap = ({ colors, insets }: UserMapProps) => {
         styleURL="https://tiles.openfreemap.org/styles/liberty"
         compassEnabled
         pitchEnabled
-        onRegionIsChanging={onRegionIsChanging}
+        onCameraChanged={onCameraChanged}
         onDidFinishLoadingStyle={() => {
           styleLoadedRef.current = true;
           mapLogger.debug('map style loaded');

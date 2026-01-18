@@ -74,9 +74,11 @@ export const useMapCamera = ({
     [setCameraToCoordinate]
   );
 
-  const handleRegionIsChanging = useCallback(
-    (event: RegionIsChangingEvent) => {
-      const isUserInteraction = event?.properties?.isUserInteraction;
+  const handleCameraChanged = useCallback((event: any) => {
+    const typedEvent = event as CameraChangedEvent | null | undefined;
+    const isUserInteraction =
+      typedEvent?.properties?.isUserInteraction ??
+      typedEvent?.gestures?.isUserInteraction;
       if (!isUserInteraction) {
         return;
       }
@@ -85,9 +87,7 @@ export const useMapCamera = ({
         cameraClearTimeoutRef.current = null;
       }
       setCameraSettings(null);
-    },
-    []
-  );
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -104,11 +104,14 @@ export const useMapCamera = ({
     initialCamera,
     setCameraToCoordinate,
     setCameraToLocation,
-    onRegionIsChanging: handleRegionIsChanging,
+    onCameraChanged: handleCameraChanged,
   };
 };
-type RegionIsChangingEvent = {
+type CameraChangedEvent = {
   properties?: {
+    isUserInteraction?: boolean;
+  };
+  gestures?: {
     isUserInteraction?: boolean;
   };
 };
