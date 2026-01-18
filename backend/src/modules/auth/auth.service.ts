@@ -63,7 +63,6 @@ export class AuthService {
         throw new UnauthorizedException('Unsupported token algorithm');
       }
     } catch (err) {
-      // Log a short debug message to help diagnose verification failures (no secrets)
       console.debug('jwtVerify failed:', err?.message ?? err);
       throw new UnauthorizedException('Invalid token');
     }
