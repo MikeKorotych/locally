@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import Mapbox, {
   Camera,
@@ -7,14 +7,21 @@ import Mapbox, {
   type Location as MapboxLocation,
 } from '@rnmapbox/maps';
 import type { EdgeInsets } from 'react-native-safe-area-context';
-import * as Location from 'expo-location';
 import * as Haptics from 'expo-haptics';
 import { ProfileColors } from '@/utils/colors';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useMapCamera } from '@/utils/map/camera';
+import { useCurrentAddress } from '@/utils/map/current-address';
+import { useUserLocation } from '@/utils/map/location';
+import { useMapLogger } from '@/utils/map/logger';
 
-Mapbox.setAccessToken(
-  'pk.eyJ1IjoieXJvdmNoYW5lbiIsImEiOiJjbWtqbXZiYWkwem41M2RzYW9manlkOHAxIn0.sG6tgUtWUOYKc5MrYZnYyg'
-);
+const ZOOM_LEVEL = 18;
+const PITCH_ANGLE = 60;
+
+const mapboxToken = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN;
+if (mapboxToken) {
+  Mapbox.setAccessToken(mapboxToken);
+}
 
 type UserMapProps = {
   colors: typeof ProfileColors.light | typeof ProfileColors.dark;
@@ -23,96 +30,57 @@ type UserMapProps = {
 
 export const UserMap = ({ colors, insets }: UserMapProps) => {
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const cameraRef = useRef<Mapbox.Camera>(null);
   const styleLoadedRef = useRef(false);
-  const refLocation = useRef<Location.LocationObject>(null);
-  const [cameraSettings, setCameraSettings] = useState<{
-    centerCoordinate: [number, number];
-    zoomLevel: number;
-    pitch: number;
-    heading: number;
-    animationMode?: 'flyTo';
-    animationDuration?: number;
-  } | null>(null);
-  const hasSetInitialCamera = useRef(false);
-  const cameraClearTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null
-  );
-
-  const initialCamera = useMemo(
-    () => ({
-      centerCoordinate: [34.4949, 49.5440] as [number, number],
-      zoomLevel: 18,
-      pitch: 60,
-    }),
-    []
-  );
+  const { locationRef, requestAndLoadLocation } = useUserLocation();
+  const { address, addressDetails, resolveAddress } = useCurrentAddress();
+  const mapLogger = useMapLogger('UserMap');
+  const {
+    cameraRef,
+    cameraSettings,
+    initialCamera,
+    setCameraToLocation,
+    onRegionIsChanging,
+  } = useMapCamera({
+    initialCenter: [34.4949, 49.5440],
+    initialZoom: ZOOM_LEVEL,
+    pitch: PITCH_ANGLE,
+  });
 
   useEffect(() => {
-    console.log('map style loaded state', styleLoadedRef.current);
+    mapLogger.debug('map style loaded state', {
+      loaded: styleLoadedRef.current,
+    });
   }, []);
 
-  const setCameraToLocation = (
-    location: Location.LocationObject,
-    animationDuration = 800
-  ) => {
-    if (cameraClearTimeoutRef.current) {
-      clearTimeout(cameraClearTimeoutRef.current);
-      cameraClearTimeoutRef.current = null;
-    }
-    setCameraSettings({
-      centerCoordinate: [
-        location.coords.longitude,
-        location.coords.latitude,
-      ],
-      zoomLevel: 18,
-      pitch: 60,
-      heading: 0,
-      animationMode: animationDuration > 0 ? 'flyTo' : undefined,
-      animationDuration: animationDuration > 0 ? animationDuration : undefined,
-    });
-    if (!hasSetInitialCamera.current) {
-      hasSetInitialCamera.current = true;
-    }
-    const resetDelay = animationDuration > 0 ? animationDuration + 200 : 200;
-    cameraClearTimeoutRef.current = setTimeout(() => {
-      setCameraSettings(null);
-      cameraClearTimeoutRef.current = null;
-    }, resetDelay);
-  };
-
   const handleCenterMap = async () => {
-    if (refLocation.current) {
-      setCameraToLocation(refLocation.current);
+    if (locationRef.current) {
+      setCameraToLocation(locationRef.current);
     }
 
     try {
-      console.log('centering map');
+      mapLogger.debug('centering map');
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      refLocation.current = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-      if (refLocation.current) {
-        setCameraToLocation(refLocation.current);
+      const current = await requestAndLoadLocation();
+      if (current) {
+        setCameraToLocation(current);
+        void resolveAddress({
+          latitude: current.coords.latitude,
+          longitude: current.coords.longitude,
+        });
       }
-      console.log('location', location);
     } catch (error) {
       console.log('error centering map', error);
     }
   };
 
   const loadLocation = async () => {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') {
-      return;
-    }
-
-    refLocation.current = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
-    });
-
-    if (refLocation.current && !hasSetInitialCamera.current) {
-      setCameraToLocation(refLocation.current, 0);
+    const current = await requestAndLoadLocation();
+    if (current) {
+      setCameraToLocation(current, 0);
+      void resolveAddress({
+        latitude: current.coords.latitude,
+        longitude: current.coords.longitude,
+      });
     }
   };
 
@@ -120,23 +88,26 @@ export const UserMap = ({ colors, insets }: UserMapProps) => {
     void loadLocation();
   }, []);
 
-  useEffect(() => {
-    return () => {
-      if (cameraClearTimeoutRef.current) {
-        clearTimeout(cameraClearTimeoutRef.current);
-        cameraClearTimeoutRef.current = null;
-      }
-    };
-  }, []);
-
   const handleUserLocationUpdate = async (location: MapboxLocation) => {
     const coordinate = [
       location.coords.longitude,
       location.coords.latitude,
     ];
-    console.log('userLocationUpdate coordinate', coordinate);
-    console.log('map style loaded?', styleLoadedRef.current);
+    mapLogger.debug('userLocationUpdate', {
+      coordinate,
+      styleLoaded: styleLoadedRef.current,
+    });
   };
+
+  useEffect(() => {
+    if (!address && !addressDetails) {
+      return;
+    }
+    mapLogger.debug('current address', {
+      address,
+      addressDetails,
+    });
+  }, [address, addressDetails, mapLogger]);
 
   return (
     <>
@@ -145,19 +116,10 @@ export const UserMap = ({ colors, insets }: UserMapProps) => {
         styleURL="https://tiles.openfreemap.org/styles/liberty"
         compassEnabled
         pitchEnabled
-        onRegionIsChanging={(event) => {
-          const isUserInteraction = event?.properties?.isUserInteraction;
-          if (isUserInteraction) {
-            if (cameraClearTimeoutRef.current) {
-              clearTimeout(cameraClearTimeoutRef.current);
-              cameraClearTimeoutRef.current = null;
-            }
-            setCameraSettings(null);
-          }
-        }}
+        onRegionIsChanging={onRegionIsChanging}
         onDidFinishLoadingStyle={() => {
           styleLoadedRef.current = true;
-          console.log('map style loaded');
+          mapLogger.debug('map style loaded');
         }}
       >
         <Camera
