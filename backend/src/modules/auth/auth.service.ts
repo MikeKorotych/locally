@@ -1,24 +1,25 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { jwtVerify, createRemoteJWKSet, decodeProtectedHeader } from 'jose';
 import { SupabaseJwtPayload } from './auth.types';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
   private jwks: ReturnType<typeof createRemoteJWKSet>;
   private hs256Secret?: string;
 
-  constructor() {
-    const supabaseUrl = process.env.SUPABASE_URL;
+  constructor(private readonly config: ConfigService) {
+    const supabaseUrl = this.config.get<string>('DATABASE_URL');
+    console.log(supabaseUrl);
     if (!supabaseUrl) {
       throw new Error(
-        'SUPABASE_URL is not defined — set SUPABASE_URL in your environment (.env or container env).',
+        'DATABASE_URL is not defined — set DATABASE_URL in your environment (.env or container env).',
       );
     }
     this.jwks = createRemoteJWKSet(
       new URL(`${supabaseUrl}/auth/v1/.well-known/jwks.json`),
     );
-
-    this.hs256Secret = process.env.SUPABASE_JWT_SECRET;
+    this.hs256Secret = this.config.get<string>('SUPABASE_JWT_SECRET');
   }
 
   async verifyToken(token: string): Promise<SupabaseJwtPayload> {
@@ -31,7 +32,9 @@ export class AuthService {
     }
 
     try {
-      const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/+$/g, '');
+      const supabaseUrl = this.config
+        .get<string>('DATABASE_URL')
+        ?.replace(/\/+$/g, '');
       const issuer = supabaseUrl?.endsWith('/auth/v1')
         ? supabaseUrl
         : `${supabaseUrl}/auth/v1`;
