@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import Mapbox, {
   Camera,
@@ -67,11 +67,21 @@ export const UserMap = ({ colors, insets }: UserMapProps) => {
     onDebug: (message, payload) => mapLogger.debug(message, payload),
   });
 
+  // Стабильные данные для подсветки: если ничего не выбрано, передаем пустую коллекцию
+  const highlightShape = useMemo(
+    () =>
+      (selectedFeature || {
+        type: 'FeatureCollection',
+        features: [],
+      }) as any,
+    [selectedFeature]
+  );
+
   useEffect(() => {
     mapLogger.debug('map style loaded state', {
       loaded: styleLoadedRef.current,
     });
-  }, []);
+  }, [mapLogger]);
 
   const handleCenterMap = async () => {
     if (locationRef.current) {
@@ -94,7 +104,7 @@ export const UserMap = ({ colors, insets }: UserMapProps) => {
     }
   };
 
-  const loadLocation = async () => {
+  const loadLocation = useCallback(async () => {
     const current = await requestAndLoadLocation();
     if (current) {
       setCameraToLocation(current, 0);
@@ -103,11 +113,11 @@ export const UserMap = ({ colors, insets }: UserMapProps) => {
         longitude: current.coords.longitude,
       });
     }
-  };
+  }, [requestAndLoadLocation, setCameraToLocation, resolveAddress]);
 
   useEffect(() => {
     void loadLocation();
-  }, []);
+  }, [loadLocation]);
 
   const handleUserLocationUpdate = async (location: MapboxLocation) => {
     const coordinate = [
@@ -203,21 +213,20 @@ export const UserMap = ({ colors, insets }: UserMapProps) => {
           followUserMode={undefined}
         />
         <UserLocation visible onUpdate={handleUserLocationUpdate} />
-        {selectedFeature ? (
-          <ShapeSource id="focused-building" shape={selectedFeature}>
-            <FillExtrusionLayer
-              id="focused-building-fill"
-              minZoomLevel={0}
-              maxZoomLevel={24}
-              style={{
-                fillExtrusionColor: '#2b7cff',
-                fillExtrusionHeight: ['get', 'render_height'],
-                fillExtrusionBase: ['get', 'render_min_height'],
-                fillExtrusionOpacity: 0.6,
-              }}
-            />
-          </ShapeSource>
-        ) : null}
+        <ShapeSource id="focused-building" shape={highlightShape}>
+          <FillExtrusionLayer
+            id="focused-building-fill"
+            minZoomLevel={0}
+            maxZoomLevel={24}
+            style={{
+              fillExtrusionColor: '#2b7cff',
+              // Добавляем 0.2 метра к высоте, чтобы крыша не мерцала (Z-fighting)
+              fillExtrusionHeight: ['+', ['get', 'render_height'], 0.2],
+              fillExtrusionBase: ['get', 'render_min_height'],
+              fillExtrusionOpacity: 0.6,
+            }}
+          />
+        </ShapeSource>
       </MapView>
       <Pressable
         style={[styles.locationButton, { bottom: insets.bottom + 16 }]}

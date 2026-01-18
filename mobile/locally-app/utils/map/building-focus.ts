@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import type { Feature, Polygon } from 'geojson';
+import { buffer } from '@turf/buffer';
 import { getPolygonCenter, getDistance } from '@/utils/map/geometry';
 
 type MapRef = {
@@ -133,8 +134,21 @@ export const useBuildingFocus = ({
         };
       }
       
+      // "Одеваем объемный чехол": расширяем геометрию на 20 см во все стороны
+      // чтобы убрать мерцание (Z-fighting) на стенах здания
       if (building) {
-        console.log('--- SELECTED BUILDING DATA (FIXED) ---');
+        try {
+          const buffered = buffer(building, 0.2, { units: 'meters' });
+          if (buffered) {
+            building = buffered as Feature<Polygon>;
+          }
+        } catch (err) {
+          console.log('Error buffering building geometry:', err);
+        }
+      }
+      
+      if (building) {
+        console.log('--- SELECTED BUILDING DATA (FIXED & BUFFERED) ---');
         console.log('ID:', building.id);
         console.log('Geometry Type:', building.geometry.type);
         console.log('------------------------------');
