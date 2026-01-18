@@ -26,8 +26,12 @@ export interface SupabaseJwtPayload {
     avatar_url?: string;
     [key: string]: any;
   };
+  amr: [
+    {
+      method: string;
+      timestamp: number;
+    },
+  ];
 }
-
-export type AuthMethod = 'EMAIL' | 'GOOGLE' | 'APPLE';
 
 export type AuthProvider = 'SUPABASE';

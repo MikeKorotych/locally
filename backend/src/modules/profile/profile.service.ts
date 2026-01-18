@@ -1,10 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'nestjs-prisma';
-import {
-  SupabaseJwtPayload,
-  AuthMethod,
-  AuthProvider,
-} from '../auth/auth.types';
+import { SupabaseJwtPayload } from '../auth/auth.types';
 import { User } from 'src/types/user/user.types';
 
 @Injectable()
@@ -34,12 +30,13 @@ export class ProfileService {
             lastName: user.user_metadata.last_name || null,
           },
         });
+        const method = user.amr[0]?.method;
         await prisma.authIdentity.create({
           data: {
             provider: 'SUPABASE',
             providerUserId: user.sub,
             userId: createdUser.id,
-            method: 'EMAIL',
+            method,
           },
         });
         return createdUser;

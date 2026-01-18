@@ -33,7 +33,6 @@ export class SupabaseAuthGuard implements CanActivate {
     }
 
     const token = authHeader.slice(7);
-
     try {
       const payload: SupabaseJwtPayload =
         await this.authService.verifyToken(token);
