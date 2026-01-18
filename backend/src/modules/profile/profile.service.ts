@@ -1,8 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'nestjs-prisma';
-import { SupabaseJwtPayload } from '../auth/auth.types';
+import {
+  SupabaseJwtPayload,
+  AuthMethod,
+  AuthProvider,
+} from '../auth/auth.types';
 import { User } from 'src/types/user/user.types';
-import { AuthMethod, AuthProvider } from '@prisma/client';
 
 @Injectable()
 export class ProfileService {
@@ -12,7 +15,7 @@ export class ProfileService {
     const existingAuthIdentity = await this.prisma.authIdentity.findUnique({
       where: {
         provider_providerUserId: {
-          provider: AuthProvider.SUPABASE,
+          provider: 'SUPABASE',
           providerUserId: user.sub,
         },
       },
@@ -33,10 +36,10 @@ export class ProfileService {
         });
         await prisma.authIdentity.create({
           data: {
-            provider: AuthProvider.SUPABASE,
+            provider: 'SUPABASE',
             providerUserId: user.sub,
             userId: createdUser.id,
-            method: AuthMethod.EMAIL,
+            method: 'EMAIL',
           },
         });
         return createdUser;
