@@ -41,12 +41,13 @@ jobs:
 
             # Build backend
             cd backend
-            sudo docker build --build-arg DATABASE_URL="${{ secrets.DATABASE_URL }}" -t locally-backend .
+            sudo docker build --build-arg DATABASE_URL="${{ secrets.DATABASE_URL }}" --build-arg SUPABASE_URL="${{ secrets.SUPABASE_URL }}" -t locally-backend .
             cd ..
 
-            # Write single DATABASE_URL env file
+            # Write single DATABASE_URL + SUPABASE_URL env file
             cat > "$REPO_DIR/.env.production" <<EOF
             DATABASE_URL=${{ secrets.DATABASE_URL }}
+            SUPABASE_URL=${{ secrets.SUPABASE_URL }}
             NODE_ENV=production
             EOF
 

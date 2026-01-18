@@ -1,19 +1,17 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
-import { ClerkUserId } from 'src/decorators/clerk.decorator';
-import { PROFILE_ENUMS } from 'src/enums/routes.enums';
-import { ClerkAuthGuard } from 'src/guards/clerk.guard';
 import { ProfileService } from './profile.service';
-import { User } from 'src/types/user/user.types';
+import { AuthUser } from '../auth/auth.decorator';
+import { PROFILE_ENUMS } from './profile.enum';
+import { type SupabaseJwtPayload } from '../auth/auth.types';
+import { SupabaseAuthGuard } from '../auth/auth.guard';
 
-@UseGuards(ClerkAuthGuard)
+@UseGuards(SupabaseAuthGuard)
 @Controller(PROFILE_ENUMS.BASE)
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
 
   @Get(PROFILE_ENUMS.ME)
-  public async profile(
-    @ClerkUserId() clerkUserId: string,
-  ): Promise<Partial<User>> {
-    return await this.profileService.getOrCreate(clerkUserId);
+  public async profile(@AuthUser() user: SupabaseJwtPayload): Promise<any> {
+    return await this.profileService.getOrCreate(user);
   }
 }

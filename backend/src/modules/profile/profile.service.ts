@@ -1,43 +1,48 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'nestjs-prisma';
-import { clerkClient } from '@clerk/clerk-sdk-node';
+import { SupabaseJwtPayload } from '../auth/auth.types';
 import { User } from 'src/types/user/user.types';
 
 @Injectable()
 export class ProfileService {
   constructor(private readonly prisma: PrismaService) {}
 
-  public async getOrCreate(clerkId: string): Promise<Partial<User>> {
-    const existingUser = await this.prisma.user.findUnique({
-      where: { clerkId },
-    });
-
-    if (!existingUser) {
-      const clerkUser = await clerkClient.users.getUser(clerkId);
-      const email = clerkUser.emailAddresses[0]?.emailAddress;
-      const { firstName, lastName } = clerkUser;
-      const newUser = await this.prisma.user.create({
-        data: {
-          clerkId,
-          email,
-          firstName,
-          lastName,
+  public async getOrCreate(user: SupabaseJwtPayload): Promise<User> {
+    const existingAuthIdentity = await this.prisma.authIdentity.findUnique({
+      where: {
+        provider_providerUserId: {
+          provider: 'SUPABASE',
+          providerUserId: user.sub,
         },
+      },
+      include: {
+        user: true,
+      },
+    });
+    if (existingAuthIdentity) {
+      return existingAuthIdentity.user;
+    } else {
+      const newUser = await this.prisma.$transaction(async (prisma) => {
+        const createdUser = await prisma.user.create({
+          data: {
+            email: user.email || null,
+            firstName: user.user_metadata.first_name || null,
+            lastName: user.user_metadata.last_name || null,
+          },
+        });
+        const method = user.amr[0]?.method;
+        await prisma.authIdentity.create({
+          data: {
+            email: user.email || null,
+            provider: 'SUPABASE',
+            providerUserId: user.sub,
+            userId: createdUser.id,
+            method,
+          },
+        });
+        return createdUser;
       });
-      const {
-        id,
-        email: createdEmail,
-        firstName: createdFirstName,
-        lastName: createdLastName,
-      } = newUser;
-      return {
-        id,
-        email: createdEmail,
-        firstName: createdFirstName,
-        lastName: createdLastName,
-      };
+      return newUser;
     }
-
-    return existingUser;
   }
 }

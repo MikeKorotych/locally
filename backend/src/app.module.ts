@@ -1,9 +1,12 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config/dist/config.module';
+import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from 'nestjs-prisma';
 import { ProfileModule } from './modules/profile/profile.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { SupabaseAuthGuard } from './modules/auth/auth.guard';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -16,9 +19,10 @@ import { ProfileModule } from './modules/profile/profile.module';
     PrismaModule.forRoot({
       isGlobal: true,
     }),
+    AuthModule,
     ProfileModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, { provide: APP_GUARD, useClass: SupabaseAuthGuard }],
 })
 export class AppModule {}
