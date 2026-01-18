@@ -10,6 +10,7 @@ export class AuthService {
 
   constructor(private readonly config: ConfigService) {
     const supabaseUrl = this.config.get<string>('SUPABASE_URL');
+    console.log(supabaseUrl);
     if (!supabaseUrl) {
       throw new Error(
         'SUPABASE_URL is not defined — set SUPABASE_URL in your environment (.env or container env).',
@@ -63,7 +64,6 @@ export class AuthService {
       }
     } catch (err) {
       // Log a short debug message to help diagnose verification failures (no secrets)
-      // eslint-disable-next-line no-console
       console.debug('jwtVerify failed:', err?.message ?? err);
       throw new UnauthorizedException('Invalid token');
     }
