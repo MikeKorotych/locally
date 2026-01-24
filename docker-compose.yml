@@ -19,10 +19,9 @@ services:
     image: locally-backend
     container_name: locally_backend
     restart: always
-    expose:
-      - "8080"
     env_file:
       - .env.production
+
 volumes:
   caddy_data:
   caddy_config:
