@@ -10,7 +10,6 @@ export class AuthService {
 
   constructor(private readonly config: ConfigService) {
     const supabaseUrl = this.config.get<string>('SUPABASE_URL');
-    console.log(supabaseUrl);
     if (!supabaseUrl) {
       throw new Error(
         'SUPABASE_URL is not defined — set SUPABASE_URL in your environment (.env or container env).',

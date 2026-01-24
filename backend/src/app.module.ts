@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from 'nestjs-prisma';
 import { ProfileModule } from './modules/profile/profile.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { HealthModule } from './modules/health/health.module';
 import { SupabaseAuthGuard } from './modules/auth/auth.guard';
 import { APP_GUARD } from '@nestjs/core';
 
@@ -21,8 +22,9 @@ import { APP_GUARD } from '@nestjs/core';
     }),
     AuthModule,
     ProfileModule,
+    HealthModule,
   ],
   controllers: [AppController],
-  providers: [AppService, { provide: APP_GUARD, useClass: SupabaseAuthGuard }],
+  providers: [AppService],
 })
 export class AppModule {}
