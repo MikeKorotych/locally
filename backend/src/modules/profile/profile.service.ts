@@ -30,7 +30,7 @@ export class ProfileService {
             lastName: user.user_metadata.last_name || null,
           },
         });
-        const method = user.amr[0]?.method;
+        const method = user.amr && user.amr[0]?.method;
         await prisma.authIdentity.create({
           data: {
             email: user.email || null,
